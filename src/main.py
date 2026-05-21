@@ -62,12 +62,12 @@ def main_discussion_flow():
         # カウンター（対立意見）の発言
         speech_b = manager.generate_next_speech("counter", char_settings, fixed_theme)
         print(f"\033[35m【{speech_b['name']}】\033[0m\n{speech_b['message']}\n")
-        time.sleep(3.0)
+        time.sleep(3.0) #RPMエラーの防止
 
         # ドッペルゲンガー（ユーザーの身代わり）の発言
         speech_a = manager.generate_next_speech("doppelganger", char_settings, fixed_theme)
         print(f"\033[36m【{speech_a['name']}】\033[0m\n{speech_a['message']}\n")
-        time.sleep(3.0)
+        time.sleep(3.0) #RPMエラーの防止
 
     # 5. 議論終了後の客観的思考診断
     print("------------------------------------------------------------------")
