@@ -1,2 +1,6 @@
 .env
+<<<<<<< HEAD
 node_modules/
+=======
+_pycache__
+>>>>>>> ai-data2
