@@ -9,16 +9,16 @@ async function summonAI() {
   const resultArea = document.getElementById("resultArea");
   const button = document.getElementById("summonButton");
 
-  button.innerText = "AI‚ª‚ ‚È‚½‚ğ•ªÍ’†...";
+  button.innerText = "AIãŒã‚ãªãŸã‚’åˆ†æä¸­...";
   button.disabled = true;
 
   chatArea.innerHTML = `
-    <p>•ªg‚ğ¶¬‚µ‚Ä‚¢‚Ü‚·...</p>
+    <p>åˆ†èº«ã‚’ç”Ÿæˆã—ã¦ã„ã¾ã™...</p>
     <div class="loader"></div>
   `;
 
  try {
-  const response = await fetch("‚±‚±‚ÉAPI‚ÌURL", {
+  const response = await fetch("ã“ã“ã«APIã®URL", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -36,26 +36,26 @@ async function summonAI() {
 
     chatArea.innerHTML = `
       <div class="chat-message user-msg">
-        ‚ ‚È‚½: ${topic || "«—ˆ‚ÍˆÀ’è‚µ‚½d–‚ÉA‚«‚½‚¢"}
+        ã‚ãªãŸ: ${topic || "å°†æ¥ã¯å®‰å®šã—ãŸä»•äº‹ã«å°±ããŸã„"}
       </div>
 
       <div class="chat-message ai-msg">
-        AI: AI: ${data.reply}${personality || "Td"}‚È‰¿’lŠÏ‚ğ‚Á‚Ä‚¢‚Ü‚·‚ËB  
-        ‚Å‚à‚É‚Í’§í‚·‚é‚±‚Æ‚ÅV‚µ‚¢‰Â”\«‚ªŒ©‚Â‚©‚é‚©‚à‚µ‚ê‚Ü‚¹‚ñB
+        AI: AI: ${data.reply}${personality || "æ…é‡"}ãªä¾¡å€¤è¦³ã‚’æŒã£ã¦ã„ã¾ã™ã­ã€‚  
+        ã§ã‚‚æ™‚ã«ã¯æŒ‘æˆ¦ã™ã‚‹ã“ã¨ã§æ–°ã—ã„å¯èƒ½æ€§ãŒè¦‹ã¤ã‹ã‚‹ã‹ã‚‚ã—ã‚Œã¾ã›ã‚“ã€‚
       </div>
     `;
 
     resultArea.innerHTML = `
-      <p>‹c˜_Š®—¹</p>
-      <p>ƒe[ƒ}: ${topic || "–¢“ü—Í"}</p>
-      <p>${name || "‚ ‚È‚½"}‚³‚ñ‚ÌlŠiŒXŒü‚ğ‚à‚Æ‚É‹c˜_‚µ‚Ü‚µ‚½B</p>
+      <p>è­°è«–å®Œäº†</p>
+      <p>ãƒ†ãƒ¼ãƒ: ${topic || "æœªå…¥åŠ›"}</p>
+      <p>${name || "ã‚ãªãŸ"}ã•ã‚“ã®äººæ ¼å‚¾å‘ã‚’ã‚‚ã¨ã«è­°è«–ã—ã¾ã—ãŸã€‚</p>
     `;
 
   } catch (error) {
-    chatArea.innerHTML = `<p>Ú‘±ƒGƒ‰[: API‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB</p>`;
+    chatArea.innerHTML = `<p>æ¥ç¶šã‚¨ãƒ©ãƒ¼: APIãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚</p>`;
     console.error(error);
   }
 
-  button.innerText = "‚à‚¤ˆê“x‹c˜_‚·‚é";
+  button.innerText = "ã‚‚ã†ä¸€åº¦è­°è«–ã™ã‚‹";
   button.disabled = false;
 }
