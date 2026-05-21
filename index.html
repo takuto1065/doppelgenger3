@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自分会議、開催中</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+    <header>
+      <h1>自分会議、開催中</h1>
+      <p>AIがもう一人のあなたとして議論します</p>
+    </header>
+
+    <div class="main">
+
+      <div class="panel">
+        <h2>分身プロフィール作成</h2>
+
+        <input id="nameInput" type="text" placeholder="名前">
+        <input id="personalityInput" type="text" placeholder="性格">
+        <input id="hobbyInput" type="text" placeholder="趣味">
+        <textarea id="thoughtInput" placeholder="自分の考え方"></textarea>
+        <input id="topicInput" type="text" placeholder="今日、AIに聞きたいこと">
+
+        <button id="summonButton" onclick="summonAI()">分身を召喚</button>
+      </div>
+
+      <div class="panel">
+        <h2>AIとの議論</h2>
+
+        <div id="chatArea">
+          <p>まだ分身は召喚されていません。</p>
+          <div class="loader" id="loader" style="display:none;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="panel">
+      <h2>議論結果</h2>
+      <div id="resultArea" class="result">
+        <p>議論前です。</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
