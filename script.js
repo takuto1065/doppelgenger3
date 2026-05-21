@@ -9,53 +9,60 @@ async function summonAI() {
   const resultArea = document.getElementById("resultArea");
   const button = document.getElementById("summonButton");
 
-  button.innerText = "AI‚ª‚ ‚È‚½‚ğ•ªÍ’†...";
+  // ãƒœã‚¿ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆã‚’ãƒ­ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ä¸­ã«å¤‰æ›´
+  button.innerText = "AIãŒã‚ãªãŸã‚’åˆ†æä¸­...";
   button.disabled = true;
 
+  // ãƒãƒ£ãƒƒãƒˆã‚¨ãƒªã‚¢ã«ãƒ­ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°è¡¨ç¤º
   chatArea.innerHTML = `
-    <p>•ªg‚ğ¶¬‚µ‚Ä‚¢‚Ü‚·...</p>
+    <p>å¯¾è©±ã‚’ç”Ÿã¿å‡ºã—ã¦ã„ã¾ã™...</p>
     <div class="loader"></div>
   `;
 
- try {
-  const response = await fetch("‚±‚±‚ÉAPI‚ÌURL", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      name,
-      personality,
-      hobby,
-      thought,
-      topic
-    })
-  });
+  try {
+    // å®Ÿéš›ã«æ¥ç¶šã™ã‚‹ãƒãƒƒã‚¯ã‚¨ãƒ³ãƒ‰ï¼ˆPythonå´ãªã©ï¼‰ã®URLã‚’ã“ã“ã«å…¥ã‚Œã¾ã™
+    const response = await fetch("ã“ã“ã«APIã®URL", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        personality,
+        hobby,
+        thought,
+        topic
+      })
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
+    // ãƒãƒ£ãƒƒãƒˆãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®è¡¨ç¤ºï¼ˆæ–‡å­—åŒ–ã‘éƒ¨åˆ†ã‚’è‡ªç„¶ãªæ—¥æœ¬èªã«ä¿®æ­£ï¼‰
     chatArea.innerHTML = `
       <div class="chat-message user-msg">
-        ‚ ‚È‚½: ${topic || "«—ˆ‚ÍˆÀ’è‚µ‚½d–‚ÉA‚«‚½‚¢"}
+        ã‚ãªãŸ: ${topic || "ãƒ†ãƒ¼ãƒãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“"}
       </div>
 
       <div class="chat-message ai-msg">
-        AI: AI: ${data.reply}${personality || "Td"}‚È‰¿’lŠÏ‚ğ‚Á‚Ä‚¢‚Ü‚·‚ËB  
-        ‚Å‚à‚É‚Í’§í‚·‚é‚±‚Æ‚ÅV‚µ‚¢‰Â”\«‚ªŒ©‚Â‚©‚é‚©‚à‚µ‚ê‚Ü‚¹‚ñB
+        AI: ${data.reply}
+        <br>
+        ï¼ˆ${personality || "ã‚ãªãŸ"}ã®æ€§æ ¼ã‚„æ€è€ƒã‚’ãƒ™ãƒ¼ã‚¹ã«å›ç­”ã—ã¦ã„ã¾ã™ã€‚å¯¾ç«‹ã™ã‚‹è¦–ç‚¹ã¨è­°è«–ã™ã‚‹ã“ã¨ã§ã€æ–°ã—ã„å¯èƒ½æ€§ãŒè¦‹ã¤ã‹ã‚‹ã‹ã‚‚ã—ã‚Œã¾ã›ã‚“ã€‚ï¼‰
       </div>
     `;
 
+    // è¨ºæ–­çµæœã‚¨ãƒªã‚¢ã®è¡¨ç¤º
     resultArea.innerHTML = `
-      <p>‹c˜_Š®—¹</p>
-      <p>ƒe[ƒ}: ${topic || "–¢“ü—Í"}</p>
-      <p>${name || "‚ ‚È‚½"}‚³‚ñ‚ÌlŠiŒXŒü‚ğ‚à‚Æ‚É‹c˜_‚µ‚Ü‚µ‚½B</p>
+      <h3>è­°è«–ã®è¦ç´„</h3>
+      <p>ãƒ†ãƒ¼ãƒ: ${topic || "æœªè¨­å®š"}</p>
+      <p>${name || "ã‚ãªãŸ"}ã®ãƒ—ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚‚ã¨ã«ã€ãƒ‰ãƒƒãƒšãƒ«ã‚²ãƒ³ã‚¬ãƒ¼AIã¨ã‚«ã‚¦ãƒ³ã‚¿ãƒ¼AIãŒè­°è«–ã‚’è¡Œã„ã¾ã—ãŸã€‚</p>
     `;
 
   } catch (error) {
-    chatArea.innerHTML = `<p>Ú‘±ƒGƒ‰[: API‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB</p>`;
+    chatArea.innerHTML = `<p>æ¥ç¶šã‚¨ãƒ©ãƒ¼: APIã«æ¥ç¶šã§ãã¾ã›ã‚“ã§ã—ãŸã€‚</p>`;
     console.error(error);
   }
 
-  button.innerText = "‚à‚¤ˆê“x‹c˜_‚·‚é";
+  // å‡¦ç†ãŒçµ‚ã‚ã£ãŸã‚‰ãƒœã‚¿ãƒ³ã‚’å…ƒã«æˆ»ã™
+  button.innerText = "ã‚‚ã†ä¸€åº¦è­°è«–ã‚’å§‹ã‚ã‚‹";
   button.disabled = false;
 }
