@@ -1,50 +1,86 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ドッペルゲンガー議論</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>自分会議、開催中</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
 
+<body>
   <div class="app">
     <header>
-      <h1>Doppelgänger Discussion</h1>
-      <p>AIがもう一人のあなたとして議論を交わします</p>
+      <h1>������c�A�J�Ò�</h1>
+      <p>AI��������l�̂��Ȃ��Ƃ��ċc�_���܂�</p>
     </header>
 
     <div class="main">
 
       <div class="panel">
-        <h2>分身プロフィール作成</h2>
+        <h2>���g�v���t�B�[���쐬</h2>
 
-        <input id="nameInput" type="text" placeholder="名前">
-        <input id="personalityInput" type="text" placeholder="性格">
-        <input id="hobbyInput" type="text" placeholder="趣味">
-        <textarea id="thoughtInput" placeholder="普段の考え方"></textarea>
-        <input id="topicInput" type="text" placeholder="テーマ、AIに議論してほしいこと">
+        <input id="nameInput" type="text" placeholder="���O">
+        <input id="personalityInput" type="text" placeholder="���i">
+        <input id="hobbyInput" type="text" placeholder="�">
+        <textarea id="thoughtInput" placeholder="�����̍l����"></textarea>
+        <input id="topicInput" type="text" placeholder="�����AAI�ɕ�����������">
 
-        <button id="summonButton" onclick="summonAI()">分身を召喚</button>
+        <button id="summonButton" onclick="summonAI()">���g������</button>
       </div>
 
       <div class="panel">
-        <h2>AIとの議論</h2>
+        <h2>AI�Ƃ̋c�_</h2>
 
         <div id="chatArea">
-          <p>まだ分身は召喚されていません。</p>
+          <p>�܂����g�͏�������Ă��܂���B</p>
           <div class="loader" id="loader" style="display:none;"></div>
         </div>
-      </div>
 
-    </div>
+        <button id="summonButton" class="primary-button" onclick="summonAI()">
+          分身を召喚する
+        </button>
+
+        <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled>
+          AI同士で議論させる
+        </button>
+      </section>
+
+      <section class="side-column">
+        <section class="panel avatar-panel">
+          <div class="avatar-icon">✦</div>
+
+          <div class="avatar-info">
+            <p class="avatar-label">AI分身</p>
+            <h2 id="avatarName">まだ召喚されていません</h2>
+            <p id="avatarMeta">プロフィールを入力すると、あなたの分身がここに現れます。</p>
+          </div>
+        </section>
+
+        <section class="panel chat-panel">
+          <div class="section-heading">
+            <span class="step-badge">Step 3</span>
+            <h2>AIとの議論</h2>
+          </div>
+
+          <div id="chatArea" class="chat-area">
+            <div class="empty-state">
+              <p>まだ分身は召喚されていません。</p>
+              <span>テーマを入力して「分身を召喚する」を押してね。</span>
+            </div>
+          </div>
 
     <div class="panel">
-      <h2>議論結果</h2>
+      <h2>�c�_����</h2>
       <div id="resultArea" class="result">
-        <p>議論前です。</p>
+        <p>�c�_�O�ł��B</p>
       </div>
-    </div>
+
+      <div id="resultArea" class="result-area">
+        <p>まだ議論していません。</p>
+      </div>
+    </section>
   </div>
 
   <script src="script.js"></script>
