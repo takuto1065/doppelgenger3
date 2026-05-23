@@ -17,6 +17,17 @@
       <p class="header-text">
         もう一人のあなたが、あなたの価値観で議論する。
       </p>
+
+      <div id="authArea" class="auth-area">
+        <div id="loggedOut" style="display:none;">
+          <a href="/auth/login" class="login-button">Googleでログイン</a>
+        </div>
+        <div id="loggedIn" style="display:none;" class="user-info">
+          <img id="userPicture" src="" alt="" class="user-avatar" />
+          <span id="userName"></span>
+          <a href="/auth/logout" class="logout-button">ログアウト</a>
+        </div>
+      </div>
     </header>
 
     <main class="main-layout">

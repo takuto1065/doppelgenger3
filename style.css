@@ -95,6 +95,47 @@ select {
   margin-bottom: 28px;
 }
 
+.auth-area {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.login-button {
+  display: inline-block;
+  padding: 8px 20px;
+  background: #4285f4;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login-button:hover { background: #3367d6; }
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.logout-button {
+  color: #888;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.logout-button:hover { text-decoration: underline; }
+
 .eyebrow {
   display: inline-block;
   margin: 0 0 10px;
