@@ -1,52 +1,72 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>������c�A�J�Ò�</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自分会議、開催中</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
 
+<body>
   <div class="app">
     <header>
-      <h1>������c�A�J�Ò�</h1>
-      <p>AI��������l�̂��Ȃ��Ƃ��ċc�_���܂�</p>
+      <h1>自分会議、開催中</h1>
+      <p>AIがもう一人のあなたとして議論を交わします</p>
     </header>
 
     <div class="main">
 
-      <div class="panel">
-        <h2>���g�v���t�B�[���쐬</h2>
+      <section class="panel">
+        <h2>分身プロフィール作成</h2>
 
-        <input id="nameInput" type="text" placeholder="���O">
-        <input id="personalityInput" type="text" placeholder="���i">
-        <input id="hobbyInput" type="text" placeholder="�">
-        <textarea id="thoughtInput" placeholder="�����̍l����"></textarea>
-        <input id="topicInput" type="text" placeholder="�����AAI�ɕ�����������">
+        <input id="nameInput" type="text" placeholder="名前">
+        <input id="personalityInput" type="text" placeholder="性格">
+        <input id="hobbyInput" type="text" placeholder="趣味">
+        <textarea id="thoughtInput" placeholder="普段の考え方"></textarea>
+        <input id="topicInput" type="text" placeholder="テーマ、AIに議論してほしいこと">
 
-        <button id="summonButton" onclick="summonAI()">���g������</button>
-      </div>
+        <button id="summonButton" class="primary-button" onclick="summonAI()">
+          分身を召喚する
+        </button>
 
-      <div class="panel">
-        <h2>AI�Ƃ̋c�_</h2>
+        <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled style="margin-top: 10px;">
+          AI同士で議論させる
+        </button>
+      </section>
 
-        <div id="chatArea">
-          <p>�܂����g�͏�������Ă��܂���B</p>
-          <div class="loader" id="loader" style="display:none;"></div>
-        </div>
-      </div>
+      <div class="side-column" style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
+        
+        <section class="panel avatar-panel">
+          <div class="avatar-icon">✦</div>
+          <div class="avatar-info">
+            <p class="avatar-label">AI分身</p>
+            <h2 id="avatarName">まだ召喚されていません</h2>
+            <p id="avatarMeta">プロフィールを入力すると、あなたの分身がここに現れます。</p>
+          </div>
+        </section>
 
-    </div>
+        <section class="panel chat-panel">
+          <div class="section-heading">
+            <span class="step-badge">Step 3</span>
+            <h2>AIとの議論</h2>
+          </div>
 
-    <div class="panel">
-      <h2>�c�_����</h2>
-      <div id="resultArea" class="result">
-        <p>�c�_�O�ł��B</p>
-      </div>
-    </div>
-  </div>
+          <div id="chatArea" class="chat-area">
+            <div class="empty-state">
+              <p>まだ分身は召喚されていません。</p>
+              <span>テーマを入力して「分身を召喚する」を押してね。</span>
+            </div>
+          </div>
+          <div id="loadingText" style="color: #a090a8; text-align: center; font-size: 14px; margin-top: 5px;"></div>
+        </section>
 
-  <script src="script.js"></script>
+        <section class="panel">
+          <h2>議論結果</h2>
+          <div id="resultArea" class="result-area">
+            <p>まだ議論していません。</p>
+          </div>
+        </section>
+
+      </div> </div> </div> <script src="script.js"></script>
 </body>
 </html>
