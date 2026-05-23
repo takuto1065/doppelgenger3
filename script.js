@@ -438,7 +438,6 @@ function makeShortConclusion(reply) {
 
 async function summonAI() {
   const profile = createProfileFromInputs();
-
   const chatArea = document.getElementById("chatArea");
   const resultArea = document.getElementById("resultArea");
   const loadingText = document.getElementById("loadingText");
@@ -450,106 +449,74 @@ async function summonAI() {
 
   chatArea.innerHTML = "";
   resultArea.innerHTML = "<p>議論中です…</p>";
-
   updateAvatarCard(profile);
 
-  // 🌟【追加機能】テーマ入力欄が空欄の場合、自動でテーマを生成する
-  if (!currentProfile.topic) {
-    chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">テーマを自動考案中…</p><div class="loader"></div>`;
-    if (resultArea) resultArea.innerHTML = "<p>テーマ選定中…</p>";
+  // ローディングタイマーの管理用
+  let loadingTimer = null;
 
-    try {
-      const suggestPrompt = `
-以下のプロフィールを持つユーザーが、自分のAI分身と議論を楽しめるような「おもしろい議論テーマ（お題）」を1つだけ厳密に生成してください。
-
-【プロフィール】
-名前: ${currentProfile.name || "未入力"}
-性格: ${currentProfile.personality || "未入力"}
-趣味: ${currentProfile.hobby || "未入力"}
-考え方: ${currentProfile.thought || "未入力"}
-大事にしている価値観: ${currentProfile.values || "未入力"}
-
-【生成ルール】
-・ユーザーの趣味や価値観に深く関連するか、あえて少し葛藤するようなテーマにしてください。
-・日常的な軽いテーマから、人生観に関わる深いテーマまで、本人が深く考えたくなるものがベストです。
-・説明や余計な文字（「テーマはこちらです：」など）は一切省き、**テーマのタイトル文字列だけ**を出力してください。
-・例：「朝食はパン派かご飯派か」「効率重視の仕事と、こだわり重視 of 仕事、どちらを選ぶべきか」
-`;
-
+  try {
+    // 1. テーマ生成処理
+    if (!currentProfile.topic) {
+      chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">テーマを自動考案中…</p><div class="loader"></div>`;
+      const suggestPrompt = `ユーザーのプロフィールに基づいた議論テーマを1つだけ、タイトルのみで出力してください。\nプロフィール: ${JSON.stringify(profile)}`;
+      
       const generatedTopic = await callGemini(suggestPrompt);
       const cleanedTopic = generatedTopic.trim().replace(/^["'「]/, "").replace(/["'」]$/, "");
       
-      const topicInput = document.getElementById("topicInput");
-      if (topicInput) {
-        topicInput.value = cleanedTopic;
-      }
+      document.getElementById("topicInput").value = cleanedTopic;
       currentProfile.topic = cleanedTopic;
-      
-      addMessage(`💡 テーマが未入力だったため、プロフィールから「${cleanedTopic}」を自動生成しました！`, "system-msg");
+      addMessage(`💡 テーマを「${cleanedTopic}」に自動設定しました！`, "system-msg");
       await new Promise(r => setTimeout(r, 1000));
-
-    } catch (error) {
-      console.error("テーマ自動生成エラー:", error);
-      chatArea.innerHTML = `<p style="color: red;">テーマの自動生成に失敗しました。手動で入力してください。</p>`;
-      if (button) {
-        button.disabled = false;
-        button.innerText = "分身を召喚";
-      }
-      return;
     }
-  }
 
-  setChatInputEnabled(false);
-  setAutoDebateEnabled(false);
+    // 2. 召喚準備
+    setChatInputEnabled(false);
+    setAutoDebateEnabled(false);
+    button.textContent = "分身を召喚中…";
+    button.disabled = true;
 
-  button.textContent = "分身を召喚中…";
-  button.disabled = true;
+    let loadingIndex = 0;
+    loadingText.textContent = loadingMessages[0];
+    loadingTimer = setInterval(() => {
+      loadingIndex++;
+      loadingText.textContent = loadingMessages[loadingIndex % loadingMessages.length];
+    }, 1050);
 
-  let loadingIndex = 0;
-  loadingText.textContent = loadingMessages[0];
+    // 3. API呼び出し
+    addMessage(profile.topic, "user-msg");
+    addMessage(`${profile.name || "あなた"} Mirrorを召喚しています…`, "system-msg");
+    conversationHistory.push({ role: "user", text: profile.topic });
 
-  const loadingTimer = setInterval(() => {
-    loadingIndex++;
-    loadingText.textContent = loadingMessages[loadingIndex % loadingMessages.length];
-  }, 1050);
+    let reply = "";
+    let isFallback = false;
 
-  addMessage(profile.topic, "user-msg");
-  addMessage(`${profile.name || "あなた"} Mirrorを召喚しています…`, "system-msg");
+    try {
+      const prompt = buildConversationPrompt(profile, profile.topic);
+      reply = await callGemini(prompt);
+    } catch (err) {
+      console.error(err);
+      reply = createFallbackReply(profile, profile.topic);
+      isFallback = true;
+    }
 
-  conversationHistory.push({
-    role: "user",
-    text: profile.topic
-  });
+    // 4. 結果表示
+    await typeMessage(reply, "ai-msg");
+    conversationHistory.push({ role: "assistant", text: reply });
+    createResultSummary(profile, reply, isFallback);
 
-  let reply = "";
-  let isFallback = false;
-
-  try {
-    const prompt = buildConversationPrompt(profile, profile.topic);
-    reply = await callGemini(prompt);
   } catch (error) {
-    console.error(error);
-    reply = createFallbackReply(profile, profile.topic);
-    isFallback = true;
+    // 全体のエラーハンドリング
+    console.error("召喚エラー:", error);
+    chatArea.innerHTML = `<p style="color: red;">エラーが発生しました。<br>詳細: ${error.message}</p>`;
+  } finally {
+    // 🌟 ここで必ずローディングを止める
+    if (loadingTimer) clearInterval(loadingTimer);
+    loadingText.textContent = "";
+    button.textContent = "もう一度最初から議論する";
+    button.disabled = false;
+    setChatInputEnabled(true);
+    setAutoDebateEnabled(true);
   }
-
-  clearInterval(loadingTimer);
-  loadingText.textContent = "";
-
-  await typeMessage(reply, "ai-msg");
-
-  conversationHistory.push({
-    role: "assistant",
-    text: reply
-  });
-
-  createResultSummary(profile, reply, isFallback);
-
-  button.textContent = "もう一度最初から議論する";
-  button.disabled = false;
-
-  setChatInputEnabled(true);
-  setAutoDebateEnabled(true);
 }
 
 async function sendFollowup() {
