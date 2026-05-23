@@ -1,50 +1,178 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>自分会議、開催中</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
 
+<body>
   <div class="app">
-    <header>
+    <header class="app-header">
+      <p class="eyebrow">AI Doppelgänger Discussion App</p>
       <h1>自分会議、開催中</h1>
-      <p>AIがもう一人のあなたとして議論します</p>
+      <p class="header-text">
+        もう一人のあなたが、あなたの価値観で議論する。
+      </p>
     </header>
 
-    <div class="main">
-
-      <div class="panel">
-        <h2>分身プロフィール作成</h2>
-
-        <input id="nameInput" type="text" placeholder="名前">
-        <input id="personalityInput" type="text" placeholder="性格">
-        <input id="hobbyInput" type="text" placeholder="趣味">
-        <textarea id="thoughtInput" placeholder="自分の考え方"></textarea>
-        <input id="topicInput" type="text" placeholder="今日、AIに聞きたいこと">
-
-        <button id="summonButton" onclick="summonAI()">分身を召喚</button>
-      </div>
-
-      <div class="panel">
-        <h2>AIとの議論</h2>
-
-        <div id="chatArea">
-          <p>まだ分身は召喚されていません。</p>
-          <div class="loader" id="loader" style="display:none;"></div>
+    <main class="main-layout">
+      <section class="panel form-panel">
+        <div class="section-heading">
+          <span class="step-badge">Step 1</span>
+          <h2>分身プロフィール</h2>
         </div>
+
+        <div class="form-grid">
+          <label>
+            名前
+            <input id="nameInput" type="text" placeholder="例：あなた" />
+          </label>
+
+          <label>
+            性格
+            <input id="personalityInput" type="text" placeholder="例：優しい、明るい、慎重" />
+          </label>
+
+          <label>
+            趣味
+            <input id="hobbyInput" type="text" placeholder="例：ゲーム、音楽、カフェ巡り" />
+          </label>
+
+          <label>
+            考え方
+            <textarea id="thoughtInput" placeholder="例：感情も大事にしつつ、周りとのバランスも考える"></textarea>
+          </label>
+        </div>
+
+        <details class="advanced-settings" open>
+          <summary>分身の詳細設定</summary>
+
+          <label>
+            大事にしている価値観
+            <textarea id="valuesInput" placeholder="例：納得感、人との信頼関係、楽しく続けられること"></textarea>
+          </label>
+
+          <label>
+            話し方
+            <select id="toneInput">
+              <option value="やさしく落ち着いた口調">やさしく落ち着いた口調</option>
+              <option value="明るくフレンドリーな口調">明るくフレンドリー</option>
+              <option value="論理的で冷静な口調">論理的で冷静</option>
+              <option value="少しテンション高めで前向きな口調">少しテンション高め</option>
+              <option value="短めでわかりやすい口調">短めでわかりやすい</option>
+            </select>
+          </label>
+
+          <label>
+            判断スタイル
+            <select id="decisionInput">
+              <option value="自分の気持ちと納得感を大事にして判断する">納得感重視</option>
+              <option value="メリットとデメリットを比較して判断する">比較・分析タイプ</option>
+              <option value="直感を大切にして判断する">直感タイプ</option>
+              <option value="周囲の意見も参考にしながら判断する">相談タイプ</option>
+              <option value="失敗リスクを考えながら慎重に判断する">慎重タイプ</option>
+            </select>
+          </label>
+
+          <label>
+            分身モード
+            <select id="modeInput">
+              <option value="共感しながら一緒に考える">共感モード</option>
+              <option value="あえて反対意見も出して議論する">反論モード</option>
+              <option value="未来の自分として助言する">未来の自分モード</option>
+              <option value="先生のように整理して説明する">先生モード</option>
+              <option value="背中を押すように前向きに話す">応援モード</option>
+            </select>
+          </label>
+        </details>
+
+        <div class="section-heading topic-heading">
+          <span class="step-badge">Step 2</span>
+          <h2>議論テーマ</h2>
+        </div>
+
+        <label>
+          話したいテーマ
+          <input id="topicInput" type="text" placeholder="例：将来、AI、勉強、人間関係" />
+        </label>
+
+        <div class="quick-topics">
+          <button type="button" class="topic-chip" onclick="setTopic('将来について')">将来</button>
+          <button type="button" class="topic-chip" onclick="setTopic('AIとの向き合い方')">AI</button>
+          <button type="button" class="topic-chip" onclick="setTopic('勉強の続け方')">勉強</button>
+          <button type="button" class="topic-chip" onclick="setTopic('人間関係について')">人間関係</button>
+        </div>
+
+        <button id="summonButton" class="primary-button" onclick="summonAI()">
+          分身を召喚する
+        </button>
+
+        <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled>
+          AI同士で議論させる
+        </button>
+      </section>
+
+      <section class="side-column">
+        <section class="panel avatar-panel">
+          <div class="avatar-icon">✦</div>
+
+          <div class="avatar-info">
+            <p class="avatar-label">AI分身</p>
+            <h2 id="avatarName">まだ召喚されていません</h2>
+            <p id="avatarMeta">プロフィールを入力すると、あなたの分身がここに現れます。</p>
+          </div>
+        </section>
+
+        <section class="panel chat-panel">
+          <div class="section-heading">
+            <span class="step-badge">Step 3</span>
+            <h2>AIとの議論</h2>
+          </div>
+
+          <div id="chatArea" class="chat-area">
+            <div class="empty-state">
+              <p>まだ分身は召喚されていません。</p>
+              <span>テーマを入力して「分身を召喚する」を押してね。</span>
+            </div>
+          </div>
+
+          <div id="loadingText" class="loading-text"></div>
+
+          <div class="chat-input-area">
+            <input
+              id="followupInput"
+              type="text"
+              placeholder="分身AIに追加で質問する..."
+              disabled
+            />
+
+            <button
+              id="sendButton"
+              type="button"
+              onclick="sendFollowup()"
+              disabled
+            >
+              送信
+            </button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <section class="panel result-panel">
+      <div class="section-heading">
+        <span class="step-badge">Result</span>
+        <h2>議論まとめ</h2>
       </div>
 
-    </div>
-
-    <div class="panel">
-      <h2>議論結果</h2>
-      <div id="resultArea" class="result">
-        <p>議論前です。</p>
+      <div id="resultArea" class="result-area">
+        <p>まだ議論していません。</p>
       </div>
-    </div>
+    </section>
   </div>
 
   <script src="script.js"></script>
