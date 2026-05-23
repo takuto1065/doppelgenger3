@@ -3,21 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>自分会議、開催中</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <div class="app">
-    <header>
+    <header class="app-header">
+      <p class="eyebrow">AI Doppelgänger Discussion App</p>
       <h1>自分会議、開催中</h1>
-      <p>AIがもう一人のあなたとして議論を交わします</p>
+      <p class="header-text">
+        もう一人のあなたが、あなたの価値観で議論する。
+      </p>
     </header>
 
-    <div class="main">
+    <main class="main-layout">
+      <section class="panel form-panel">
+        <div class="section-heading">
+          <span class="step-badge">Step 1</span>
+          <h2>分身プロフィール</h2>
+        </div>
 
-      <section class="panel">
-        <h2>分身プロフィール作成</h2>
+        <div class="form-grid">
+          <label>
+            名前
+            <input id="nameInput" type="text" placeholder="例：あなた" />
+          </label>
 
         <input id="nameInput" type="text" placeholder="名前">
         <input id="personalityInput" type="text" placeholder="性格">
@@ -29,15 +42,15 @@
           分身を召喚する
         </button>
 
-        <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled style="margin-top: 10px;">
+        <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled>
           AI同士で議論させる
         </button>
       </section>
 
-      <div class="side-column" style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
-        
+      <section class="side-column">
         <section class="panel avatar-panel">
           <div class="avatar-icon">✦</div>
+
           <div class="avatar-info">
             <p class="avatar-label">AI分身</p>
             <h2 id="avatarName">まだ召喚されていません</h2>
@@ -57,16 +70,42 @@
               <span>テーマを入力して「分身を召喚する」を押してね。</span>
             </div>
           </div>
-          <div id="loadingText" style="color: #a090a8; text-align: center; font-size: 14px; margin-top: 5px;"></div>
-        </section>
 
-        <section class="panel">
-          <h2>議論結果</h2>
-          <div id="resultArea" class="result-area">
-            <p>まだ議論していません。</p>
+          <div id="loadingText" class="loading-text"></div>
+
+          <div class="chat-input-area">
+            <input
+              id="followupInput"
+              type="text"
+              placeholder="分身AIに追加で質問する..."
+              disabled
+            />
+
+            <button
+              id="sendButton"
+              type="button"
+              onclick="sendFollowup()"
+              disabled
+            >
+              送信
+            </button>
           </div>
         </section>
+      </section>
+    </main>
 
-      </div> </div> </div> <script src="script.js"></script>
+    <section class="panel result-panel">
+      <div class="section-heading">
+        <span class="step-badge">Result</span>
+        <h2>議論まとめ</h2>
+      </div>
+
+      <div id="resultArea" class="result-area">
+        <p>まだ議論していません。</p>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
