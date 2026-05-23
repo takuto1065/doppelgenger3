@@ -259,40 +259,79 @@ async function summonAI() {
   const summonButton = document.getElementById("summonButton");
   const chatArea = document.getElementById("chatArea");
   const resultArea = document.getElementById("resultArea");
+  const topicInput = document.getElementById("topicInput");
 
   if (summonButton) {
     summonButton.disabled = true;
     summonButton.innerText = "分身を解析・召喚中...";
   }
 
-  // プロフィールの読み込み
+  // 1. プロフィールの読み込み
   currentProfile = createProfileFromInputs();
   updateAvatarCard(currentProfile);
 
+  // 🌟【新機能】テーマ入力欄が空欄の場合、自動でテーマを生成する
   if (!currentProfile.topic) {
-    alert("議論テーマを入力してください！");
-    if (summonButton) {
-      summonButton.disabled = false;
-      summonButton.innerText = "分身を召喚";
+    // ローディング表示を出す
+    chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">テーマを自動考案中…</p><div class="loader"></div>`;
+    
+    try {
+      // Geminiにプロフィールに合ったテーマを1つだけ提案してもらうプロンプト
+      const suggestPrompt = `
+以下のプロフィールを持つユーザーが、自分のAI分身と議論を楽しめるような「おもしろい議論テーマ（お題）」を1つだけ厳禁で生成してください。
+
+【プロフィール】
+名前: ${currentProfile.name || "未入力"}
+性格: ${currentProfile.personality || "未入力"}
+趣味: ${currentProfile.hobby || "未入力"}
+考え方: ${currentProfile.thought || "未入力"}
+大事にしている価値観: ${currentProfile.values || "未入力"}
+
+【生成ルール】
+・ユーザーの趣味や価値観に深く関連するか、あえて少し葛藤するようなテーマにしてください。
+・日常的な軽いテーマから、人生観に関わる深いテーマまで、本人が深く考えたくなるものがベストです。
+・説明や余計な文字（「テーマはこちらです：」など）は一切省き、**テーマのタイトル文字列だけ**を出力してください。
+・例：「朝食はパン派かご飯派か」「効率重視の仕事と、こだわり重視の仕事、どちらを選ぶべきか」
+`;
+
+      const generatedTopic = await callGemini(suggestPrompt);
+      
+      // 生成されたテーマを画面の入力欄と現在のプロファイルにセット
+      const引き締まったテーマ = generatedTopic.trim().replace(/^["'「]/, "").replace(/["'」]$/, ""); // 余計なカギカッコ等を除去
+      if (topicInput) {
+        topicInput.value = 引き締まったテーマ;
+      }
+      currentProfile.topic = 引き締まったテーマ;
+      
+      // チャット欄にシステムメッセージとして通知
+      addMessage(`💡 テーマが未入力だったため、プロフィールから「${引き締まったテーマ}」を自動生成しました！`, "system-msg");
+      await new Promise(r => setTimeout(r, 1000)); // ユーザーが認識できるように少し待つ
+
+    } catch (error) {
+      console.error("テーマ自動生成エラー:", error);
+      chatArea.innerHTML = `<p style="color: red;">テーマの自動生成に失敗しました。手動で入力してください。</p>`;
+      if (summonButton) {
+        summonButton.disabled = false;
+        summonButton.innerText = "分身を召喚";
+      }
+      return;
     }
-    return;
   }
 
-  // 1個ずつローディングメッセージをチャット欄に出す演出
+  // 2. 1個ずつローディングメッセージをチャット欄に出す演出（通常の流れ）
   for (const msg of loadingMessages) {
     chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">${msg}</p><div class="loader"></div>`;
-    await new Promise(r => setTimeout(r, 600)); // 少し待つ
+    await new Promise(r => setTimeout(r, 600));
   }
 
   try {
-    // 最初のシステムプロンプトを構築してPython経由でGeminiに投げる
+    // 3. 最初のシステムプロンプトを構築してPython経由でGeminiに投げる
     const basePrompt = createSystemPrompt(currentProfile);
     const reply = await callGemini(basePrompt);
 
     isSummoned = true;
     conversationHistory = [{ role: "assistant", text: reply }];
 
-    // チャット画面の初期化と最初のメッセージ表示
     chatArea.innerHTML = "";
     await typeMessage(reply, "ai-msg");
 
