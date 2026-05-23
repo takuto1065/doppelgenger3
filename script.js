@@ -223,51 +223,20 @@ ${profile.topic}
 }
 
 async function callGemini(prompt) {
-  const apiKey = "AIzaSyA503U0sJa8CNIiTWJGT2mGy_C8kPtVZWg";
-
-  if (!apiKey || apiKey === "AIzaSyA503U0sJa8CNIiTWJGT2mGy_C8kPtVZWg") {
-    throw new Error("API key is not set");
-  }
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
-      })
-    }
-  );
-
-  const data = await response.json();
+  const response = await fetch("http://127.0.0.1:5000/api/summon", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ prompt: prompt })
+  });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+    throw new Error(`サーバーエラー: ${response.status}`);
   }
 
-  if (
-    data.candidates &&
-    data.candidates[0] &&
-    data.candidates[0].content &&
-    data.candidates[0].content.parts &&
-    data.candidates[0].content.parts[0] &&
-    data.candidates[0].content.parts[0].text
-  ) {
-    return data.candidates[0].content.parts[0].text;
-  }
-
-  throw new Error("AI response format error");
+  const data = await response.json();
+  return data.reply;
 }
 
 function createFallbackReply(profile, latestUserMessage) {
