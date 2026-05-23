@@ -39,6 +39,69 @@ const loadingMessages = [
 let currentProfile = null;
 let conversationHistory = [];
 let isSummoned = false;
+let currentSessionId = null;
+
+async function checkAuthState() {
+  try {
+    const res = await fetch("/api/me", { credentials: "include" });
+    const data = await res.json();
+    const loggedOut = document.getElementById("loggedOut");
+    const loggedIn = document.getElementById("loggedIn");
+
+    if (data.logged_in) {
+      if (loggedOut) loggedOut.style.display = "none";
+      if (loggedIn) loggedIn.style.display = "flex";
+      const pic = document.getElementById("userPicture");
+      const name = document.getElementById("userName");
+      if (pic) pic.src = data.picture || "";
+      if (name) name.textContent = data.name || "";
+      await loadProfile();
+    } else {
+      if (loggedOut) loggedOut.style.display = "block";
+      if (loggedIn) loggedIn.style.display = "none";
+    }
+  } catch (e) {
+    const loggedOut = document.getElementById("loggedOut");
+    if (loggedOut) loggedOut.style.display = "block";
+  }
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch("/api/profile", { credentials: "include" });
+    if (!res.ok) return;
+    const profile = await res.json();
+    if (!profile || !profile.name) return;
+
+    const fields = ["name", "personality", "hobby", "thought", "values", "tone", "decision", "mode"];
+    fields.forEach(key => {
+      const el = document.getElementById(key + "Input");
+      if (el && profile[key]) el.value = profile[key];
+    });
+  } catch (e) {}
+}
+
+async function saveProfileToServer(profile) {
+  try {
+    await fetch("/api/profile", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile)
+    });
+  } catch (e) {}
+}
+
+async function saveChatHistory(topic, messages) {
+  try {
+    await fetch("/api/history", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic, messages })
+    });
+  } catch (e) {}
+}
 
 function getValue(id) {
   const element = document.getElementById(id);
@@ -269,7 +332,7 @@ ${profile.topic}
 }
 
 async function callGemini(prompt) {
-  const response = await fetch("http://127.0.0.1:5000/api/summon", {
+  const response = await fetch("http://127.0.0.1:5001/api/summon", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -446,6 +509,7 @@ async function summonAI() {
   currentProfile = profile;
   conversationHistory = [];
   isSummoned = true;
+  saveProfileToServer(profile);
 
   chatArea.innerHTML = "";
   resultArea.innerHTML = "<p>議論中です…</p>";
@@ -503,6 +567,7 @@ async function summonAI() {
     await typeMessage(reply, "ai-msg");
     conversationHistory.push({ role: "assistant", text: reply });
     createResultSummary(profile, reply, isFallback);
+    saveChatHistory(profile.topic, conversationHistory);
 
   } catch (error) {
     // 全体のエラーハンドリング
@@ -628,8 +693,9 @@ async function startAutoDebate() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const followupInput = document.getElementById("followupInput");
+  checkAuthState();
 
+  const followupInput = document.getElementById("followupInput");
   if (followupInput) {
     followupInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
