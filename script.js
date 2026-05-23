@@ -398,11 +398,6 @@ async function summonAI() {
   const loadingText = document.getElementById("loadingText");
   const button = document.getElementById("summonButton");
 
-  if (!profile.topic) {
-    alert("議論テーマを入力してください！");
-    return;
-  }
-
   currentProfile = profile;
   conversationHistory = [];
   isSummoned = true;
@@ -411,6 +406,52 @@ async function summonAI() {
   resultArea.innerHTML = "<p>議論中です…</p>";
 
   updateAvatarCard(profile);
+
+  // 🌟【追加機能】テーマ入力欄が空欄の場合、自動でテーマを生成する
+  if (!currentProfile.topic) {
+    chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">テーマを自動考案中…</p><div class="loader"></div>`;
+    if (resultArea) resultArea.innerHTML = "<p>テーマ選定中…</p>";
+
+    try {
+      const suggestPrompt = `
+以下のプロフィールを持つユーザーが、自分のAI分身と議論を楽しめるような「おもしろい議論テーマ（お題）」を1つだけ厳密に生成してください。
+
+【プロフィール】
+名前: ${currentProfile.name || "未入力"}
+性格: ${currentProfile.personality || "未入力"}
+趣味: ${currentProfile.hobby || "未入力"}
+考え方: ${currentProfile.thought || "未入力"}
+大事にしている価値観: ${currentProfile.values || "未入力"}
+
+【生成ルール】
+・ユーザーの趣味や価値観に深く関連するか、あえて少し葛藤するようなテーマにしてください。
+・日常的な軽いテーマから、人生観に関わる深いテーマまで、本人が深く考えたくなるものがベストです。
+・説明や余計な文字（「テーマはこちらです：」など）は一切省き、**テーマのタイトル文字列だけ**を出力してください。
+・例：「朝食はパン派かご飯派か」「効率重視の仕事と、こだわり重視の仕事、どちらを選ぶべきか」
+`;
+
+      const generatedTopic = await callGemini(suggestPrompt);
+      const cleanedTopic = generatedTopic.trim().replace(/^["'「]/, "").replace(/["'」]$/, "");
+      
+      const topicInput = document.getElementById("topicInput");
+      if (topicInput) {
+        topicInput.value = cleanedTopic;
+      }
+      currentProfile.topic = cleanedTopic;
+      
+      addMessage(`💡 テーマが未入力だったため、プロフィールから「${cleanedTopic}」を自動生成しました！`, "system-msg");
+      await new Promise(r => setTimeout(r, 1000));
+
+    } catch (error) {
+      console.error("テーマ自動生成エラー:", error);
+      chatArea.innerHTML = `<p style="color: red;">テーマの自動生成に失敗しました。手動で入力してください。</p>`;
+      if (summonButton) {
+        summonButton.disabled = false;
+        summonButton.innerText = "分身を召喚";
+      }
+      return;
+    }
+  }
 
   setChatInputEnabled(false);
   setAutoDebateEnabled(false);
