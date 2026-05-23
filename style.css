@@ -848,3 +848,16 @@ select:focus {
     padding: 13px 16px;
   }
 }
+/* 🏛️ シチュエーションボタンが選択されている時のスタイル */
+.situation-selector button.active {
+  background-color: #e2e8f0 !important; /* 背景を明るい白ベースに */
+  color: #1a202c !important;            /* 文字を濃い色にして目立たせる */
+  box-shadow: 0 0 0 3px #9f7aea;         /* 紫色の綺麗な光る枠線をつける */
+  font-weight: bold;
+  transform: scale(1.05);                /* 少しだけボタンを大きくする */
+}
+
+/* ついでにボタンの隙間やポインターの基本設定 */
+.situation-selector button {
+  transition: all 0.2s ease;
+}

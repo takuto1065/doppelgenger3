@@ -1,3 +1,33 @@
+let currentSituation = "standard";
+
+// 🌟 新しいシチュエーション（学級会や裁判など）を増やしたい時は、ここに行を追加するだけ！
+const SITUATION_SETTINGS = {
+  standard: {
+    name: "通常のAI分身対話",
+    systemPrompt: "\n・通常のトーンで、ユーザーの分身として会話を続けてください。",
+    debatePrompt: ""
+  },
+  diet: {
+    name: "国会審議モード（厳格・答弁調）",
+    systemPrompt: `
+【シチュエーション：国会審議】
+・ここは国会の予算委員会です。
+・議論AIは「野党の質問議員」、あなたは「答弁を求められた大臣」として振る舞ってください。
+・非常に厳格で礼儀正しく、堅苦しい政治家特有の口調（「〜であります」「〜と言わざるを得ません」など）をベースにしつつ、ユーザーの価値観を反映させてください。
+`,
+    debatePrompt: "\n・国会答弁の形式を徹底してください。議論AIは「議長、〇〇君」「〜について伺います」と始め、分身AIは「〇〇委員の御質問にお答えいたします」と言葉を始めてください。"
+  },
+  friends: {
+    name: "友達との雑談・ファミレス議論（タメ口・カジュアル）",
+    systemPrompt: `
+【シチュエーション：友達とのファミレス雑談】
+・ここは深夜のファミレスです。親しい友人同士で熱く語り合っています。
+・敬語は一切禁止です。完全なタメ口（「〜じゃん？」「〜だと思うんだよね」「それな！」など）で、フランクな言葉で話してください。
+`,
+    debatePrompt: "\n・2人とも完全に親しい友達同士のタメ口で、ファミレスでダラダラ喋っているようなリアルな掛け合いにしてください。「ウケる」「確かに」などの相槌も混ぜてください。"
+  }
+};
+
 const loadingMessages = [
   "人格解析中…",
   "思考パターンを読み取り中…",
@@ -125,7 +155,7 @@ function updateAvatarCard(profile) {
 }
 
 function createSystemPrompt(profile) {
-  return `
+  let prompt = `
 あなたは、ユーザー本人の人格を再現したAI分身です。
 
 以下のプロフィールをもとに、本人らしい価値観・話し方・判断基準で会話してください。
@@ -153,6 +183,14 @@ ${profile.topic}
 ・必要なら共感、反論、整理、提案を行う
 ・最後に、次に考えるとよさそうな問いを1つ添える
 `;
+
+  // 🌟 現在のシチュエーションに応じた指示文を自動合流
+  const config = SITUATION_SETTINGS[currentSituation];
+  if (config && config.systemPrompt) {
+    prompt += config.systemPrompt;
+  }
+
+  return prompt;
 }
 
 function buildConversationPrompt(profile, latestUserMessage) {
@@ -177,7 +215,7 @@ ${historyText || "まだ会話はありません。"}
 }
 
 function createAutoDebatePrompt(profile) {
-  return `
+  let prompt = `
 あなたは議論シミュレーターです。
 
 以下の2人を登場させて、テーマについて議論させてください。
@@ -220,6 +258,14 @@ ${profile.topic}
 分身AI: 〇〇
 まとめ: 〇〇
 `;
+
+  // 🌟 現在のシチュエーションに応じた自動議論用の指示文を自動合流
+  const config = SITUATION_SETTINGS[currentSituation];
+  if (config && config.debatePrompt) {
+    prompt += config.debatePrompt;
+  }
+
+  return prompt;
 }
 
 async function callGemini(prompt) {
@@ -427,7 +473,7 @@ async function summonAI() {
 ・ユーザーの趣味や価値観に深く関連するか、あえて少し葛藤するようなテーマにしてください。
 ・日常的な軽いテーマから、人生観に関わる深いテーマまで、本人が深く考えたくなるものがベストです。
 ・説明や余計な文字（「テーマはこちらです：」など）は一切省き、**テーマのタイトル文字列だけ**を出力してください。
-・例：「朝食はパン派かご飯派か」「効率重視の仕事と、こだわり重視の仕事、どちらを選ぶべきか」
+・例：「朝食はパン派かご飯派か」「効率重視の仕事と、こだわり重視 of 仕事、どちらを選ぶべきか」
 `;
 
       const generatedTopic = await callGemini(suggestPrompt);
@@ -445,9 +491,9 @@ async function summonAI() {
     } catch (error) {
       console.error("テーマ自動生成エラー:", error);
       chatArea.innerHTML = `<p style="color: red;">テーマの自動生成に失敗しました。手動で入力してください。</p>`;
-      if (summonButton) {
-        summonButton.disabled = false;
-        summonButton.innerText = "分身を召喚";
+      if (button) {
+        button.disabled = false;
+        button.innerText = "分身を召喚";
       }
       return;
     }
@@ -626,3 +672,40 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+/* ─────────────────────────────────────────────────────────
+   ✨ ボタンクリックで議論のシチュエーションを切り替える関数（完全版）
+   ───────────────────────────────────────────────────────── */
+function changeSituation(type) {
+  if (!SITUATION_SETTINGS[type]) return;
+
+  currentSituation = type;
+  
+  // 🌟 まず画面上にあるすべての選択肢ボタン（ランダム含む）から active を完全に剥ぎ取る
+  const allButtonIds = ["btn-standard", "btn-diet", "btn-friends", "btn-random"];
+  allButtonIds.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.remove("active");
+  });
+
+  // 🌟 今回選ばれたシチュエーションのボタンだけを確実に光らせる
+  const activeBtn = document.getElementById(`btn-${type}`);
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+  const config = SITUATION_SETTINGS[type];
+  addMessage(`📢 議論シチュエーションを【${config.name}】に設定しました！そのまま『分身を召喚』するか『自動議論』を開始してください。`, "system-msg");
+}
+
+/* ─────────────────────────────────────────────────────────
+   🎲 シチュエーションをランダムに選択して切り替える関数（標準含む・バグ修正版）
+   ───────────────────────────────────────────────────────── */
+function changeSituationRandom() {
+  // standard, diet, friends がフラットに3分の1の確率で選ばれる
+  const keys = Object.keys(SITUATION_SETTINGS);
+  const randomKey = keys[Math.floor(Math.random() * keys.length)];
+  
+  // 上の関数を呼び出す。中でリセットと選択ボタンの点灯がクリーンに行われます。
+  changeSituation(randomKey);
+}
