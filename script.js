@@ -120,8 +120,8 @@ function updateAvatarCard(profile) {
   const displayName = profile.name || "あなた";
   const alterName = `${displayName} Mirror`;
 
-  avatarName.textContent = alterName;
-  avatarMeta.textContent = `${profile.tone} / ${profile.mode} / ${profile.decision}`;
+  if (avatarName) avatarName.textContent = alterName;
+  if (avatarMeta) avatarMeta.textContent = `${profile.tone} / ${profile.mode} / ${profile.decision}`;
 }
 
 function createSystemPrompt(profile) {
@@ -222,63 +222,100 @@ ${profile.topic}
 `;
 }
 
+/* ─────────────────────────────────────────────────────────
+   🛠️ 綺麗に修復・最適化した API呼び出し関数
+   フロントに生のキーを置かず、Pythonサーバー(5000番)にお願いする構造に直しました
+   ───────────────────────────────────────────────────────── */
 async function callGemini(prompt) {
-  const apiKey = "AIzaSyA503U0sJa8CNIiTWJGT2mGy_C8kPtVZWg";
-
-  if (!apiKey || apiKey === "AIzaSyA503U0sJa8CNIiTWJGT2mGy_C8kPtVZWg") {
-    throw new Error("API key is not set");
-  }
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
+  try {
+    // あなたが起動する Python (Flask) サーバーのURLにリクエストを投げます
+    const response = await fetch("http://127.0.0.1:5000/api/summon", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
-      })
+      body: JSON.stringify({ prompt: prompt })
+    });
+
+    if (!response.ok) {
+      throw new Error(`サーバーエラー: ${response.status}`);
     }
-  );
 
     const data = await response.json();
-
-    chatArea.innerHTML = `
-      <div class="chat-message user-msg">
-        ���Ȃ�: ${topic || "�����͈��肵���d���ɏA������"}
-      </div>
-
-      <div class="chat-message ai-msg">
-        AI: AI: ${data.reply}${personality || "�T�d"}�ȉ��l�ς������Ă��܂��ˁB  
-        �ł����ɂ͒��킷�邱�ƂŐV�����\���������邩������܂���B
-      </div>
-    `;
-
-    resultArea.innerHTML = `
-      <p>�c�_����</p>
-      <p>�e�[�}: ${topic || "������"}</p>
-      <p>${name || "���Ȃ�"}����̐l�i�X�������Ƃɋc�_���܂����B</p>
-    `;
+    
+    // Python側から返ってきたテキスト（AIの回答）を返却
+    return data.reply;
 
   } catch (error) {
-    chatArea.innerHTML = `<p>�ڑ��G���[: API��������܂���B</p>`;
-    console.error(error);
+    console.error("通信エラーが発生しました:", error);
+    throw error;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   ✨ 初回召喚用のメイン関数を追加（HTMLのボタン連動用）
+   ───────────────────────────────────────────────────────── */
+async function summonAI() {
+  const summonButton = document.getElementById("summonButton");
+  const chatArea = document.getElementById("chatArea");
+  const resultArea = document.getElementById("resultArea");
+
+  if (summonButton) {
+    summonButton.disabled = true;
+    summonButton.innerText = "分身を解析・召喚中...";
   }
 
-  button.innerText = "������x�c�_����";
-  button.disabled = false;
+  // プロフィールの読み込み
+  currentProfile = createProfileFromInputs();
+  updateAvatarCard(currentProfile);
 
-  setChatInputEnabled(true);
-  setAutoDebateEnabled(true);
+  if (!currentProfile.topic) {
+    alert("議論テーマを入力してください！");
+    if (summonButton) {
+      summonButton.disabled = false;
+      summonButton.innerText = "分身を召喚";
+    }
+    return;
+  }
+
+  // 1個ずつローディングメッセージをチャット欄に出す演出
+  for (const msg of loadingMessages) {
+    chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">${msg}</p><div class="loader"></div>`;
+    await new Promise(r => setTimeout(r, 600)); // 少し待つ
+  }
+
+  try {
+    // 最初のシステムプロンプトを構築してPython経由でGeminiに投げる
+    const basePrompt = createSystemPrompt(currentProfile);
+    const reply = await callGemini(basePrompt);
+
+    isSummoned = true;
+    conversationHistory = [{ role: "assistant", text: reply }];
+
+    // チャット画面の初期化と最初のメッセージ表示
+    chatArea.innerHTML = "";
+    await typeMessage(reply, "ai-msg");
+
+    if (resultArea) {
+      resultArea.innerHTML = `
+        <h3>議論開始</h3>
+        <p>テーマ: ${escapeHtml(currentProfile.topic)}</p>
+        <p>${escapeHtml(currentProfile.name || "あなた")} の分身の召喚に成功しました。追従チャット、または自動議論を開始できます。</p>
+      `;
+    }
+
+    setChatInputEnabled(true);
+    setAutoDebateEnabled(true);
+
+  } catch (error) {
+    chatArea.innerHTML = `<p style="color: red;">召喚エラー: バックエンドサーバーが起動していないか、APIキーに問題があります。</p>`;
+    if (summonButton) summonButton.disabled = false;
+  }
+
+  if (summonButton) {
+    summonButton.innerText = "もう一度召喚する";
+    summonButton.disabled = false;
+  }
 }
 
 async function sendFollowup() {
@@ -309,21 +346,19 @@ async function sendFollowup() {
     text: userMessage
   });
 
-  loadingText.textContent = "AI分身が考え中…";
+  if (loadingText) loadingText.textContent = "AI分身が考え中…";
 
   let reply = "";
-  let isFallback = false;
 
   try {
     const prompt = buildConversationPrompt(currentProfile, userMessage);
     reply = await callGemini(prompt);
   } catch (error) {
     console.error(error);
-    reply = createFallbackReply(currentProfile, userMessage);
-    isFallback = true;
+    reply = "申し訳ありません、接続エラーにより思考が中断されました。Pythonサーバーの状態を確認してください。";
   }
 
-  loadingText.textContent = "";
+  if (loadingText) loadingText.textContent = "";
 
   await typeMessage(reply, "ai-msg");
 
@@ -332,7 +367,11 @@ async function sendFollowup() {
     text: reply
   });
 
-  createResultSummary(currentProfile, reply, isFallback);
+  // フォールバックやサマリー表示関数がない場合の安全対策
+  const resultArea = document.getElementById("resultArea");
+  if (resultArea) {
+    resultArea.innerHTML = `<h3>議論継続中</h3><p>対話回数: ${conversationHistory.length}回</p>`;
+  }
 
   followupInput.disabled = false;
   sendButton.disabled = false;
@@ -348,34 +387,32 @@ async function startAutoDebate() {
   const autoDebateButton = document.getElementById("autoDebateButton");
   const loadingText = document.getElementById("loadingText");
 
-  autoDebateButton.disabled = true;
-  loadingText.textContent = "AI同士が議論中…";
+  if (autoDebateButton) autoDebateButton.disabled = true;
+  if (loadingText) loadingText.textContent = "AI同士が議論中…";
 
   addMessage("議論AIと分身AIの自動議論を開始します。", "system-msg");
 
   let debateText = "";
-  let isFallback = false;
 
   try {
     const prompt = createAutoDebatePrompt(currentProfile);
     debateText = await callGemini(prompt);
   } catch (error) {
     console.error(error);
-    debateText = createFallbackDebate(currentProfile);
-    isFallback = true;
+    debateText = "議論AI: 申し訳ありません、自動議論の生成中にエラーが発生しました。\n分身AI: サーバーの通信を確認する必要がありそうです。";
   }
 
-  loadingText.textContent = "";
+  if (loadingText) loadingText.textContent = "";
 
-  const turns = splitDebateText(debateText);
-
-  for (const turn of turns) {
-    if (turn.speaker === "opponent") {
-      await typeMessage(turn.text, "opponent-msg");
-    } else if (turn.speaker === "doppel") {
-      await typeMessage(turn.text, "ai-msg");
+  // 簡易的に改行や発言ごとに分ける簡易スプリッター
+  const lines = debateText.split("\n").filter(l => l.trim() !== "");
+  for (const line of lines) {
+    if (line.startsWith("議論AI:")) {
+      await typeMessage(line, "opponent-msg");
+    } else if (line.startsWith("分身AI:") || line.startsWith("分身:")) {
+      await typeMessage(line, "ai-msg");
     } else {
-      await typeMessage(turn.text, "system-msg");
+      await typeMessage(line, "system-msg");
     }
   }
 
@@ -383,8 +420,6 @@ async function startAutoDebate() {
     role: "assistant",
     text: debateText
   });
-
-  createResultSummary(currentProfile, debateText, isFallback);
 
   autoDebateButton.disabled = false;
 }
