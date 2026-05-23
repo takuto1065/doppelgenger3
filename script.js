@@ -35,6 +35,21 @@ const loadingMessages = [
   "分身の口調を調整中…",
   "議論準備中…"
 ];
+const roastNames = [
+  "🕊️ 平和",
+  "🙂 普通",
+  "🔥 白熱",
+  "☢️ 修羅場"
+];
+
+function updateRoastLabel() {
+  const slider = document.getElementById("roastSlider");
+  const label = document.getElementById("roastLabel");
+
+  if (!slider || !label) return;
+
+  label.textContent = roastNames[Number(slider.value)];
+}
 
 let currentProfile = null;
 let conversationHistory = [];
@@ -202,7 +217,8 @@ function createProfileFromInputs() {
     tone: getValue("toneInput") || "やさしく落ち着いた口調",
     decision: getValue("decisionInput") || "自分の気持ちと納得感を大事にして判断する",
     mode: getValue("modeInput") || "共感しながら一緒に考える",
-    topic: getValue("topicInput")
+    topic: getValue("topicInput"),
+    roastLevel: Number(document.getElementById("roastSlider")?.value || 1)
   };
 }
 
@@ -306,6 +322,31 @@ function createAutoDebatePrompt(profile) {
 
 【議論テーマ】
 ${profile.topic}
+【煽りレベル】
+${roastNames[profile.roastLevel]}
+
+■煽りレベル詳細
+
+0: 🕊️ 平和
+・煽りは禁止
+・互いを尊重しながら議論する
+・反論しても丁寧に行う
+
+1: 🙂 普通
+・軽い皮肉やツッコミは可
+・基本は落ち着いた議論
+・挑発は最小限
+
+2: 🔥 白熱
+・優勢時はやや強めの煽り可
+・論理的な反論を積極的に行う
+・相手の矛盾を鋭く指摘してよい
+
+3: ☢️ 修羅場
+・かなり挑発的な議論を許可
+・皮肉や強い論破表現を使用してよい
+・ただし人格否定、暴言、差別表現は禁止
+・必ず論理的根拠を伴うこと
 
 【議論ルール】
 ・議論AIと${profile.name || "ユーザー"} Mirrorが交互に話す
@@ -320,6 +361,37 @@ ${profile.topic}
 議論AI: 〇〇
 分身AI: 〇〇
 まとめ: 〇〇
+
+【感情・煽りルール】
+
+・議論が進み、どちらかが優勢だと判断した場合のみ、軽い煽り表現を使用してよい
+・煽りは議論の補助であり目的ではない（必ず論理とセット）
+・煽りは短く（1〜2文以内）
+
+■煽りの種類(これは使用可能な例であって、必ずしもそのまま使う必要はない)
+① 理解力系
+- 「それ今の説明で理解できてない？」
+- 「ちょっと前提からズレてるかもね」
+
+② 常識圧系
+- 「普通に考えたらそうはならないよ」
+- 「そこは常識的に厳しいと思う」
+
+③ 打ち切り系
+- 「もうその時点で結論出てる気がするけど」
+- 「それ以上広げても変わらなさそう」
+
+④ 皮肉系（推奨）
+- 「その世界観で考えるとそうなるのか」
+- 「かなり都合よく解釈してるね」
+- 「自信あるのはいいけど少し危ういよね」
+
+■禁止
+・人格否定
+・暴言
+・差別表現
+・議論の放棄
+・煽りのみで終わる発言
 `;
 
   // 🌟 現在のシチュエーションに応じた自動議論用の指示文を自動合流
@@ -703,6 +775,13 @@ document.addEventListener("DOMContentLoaded", () => {
         sendFollowup();
       }
     });
+  }
+
+  const roastSlider = document.getElementById("roastSlider");
+
+  if (roastSlider) {
+    roastSlider.addEventListener("input", updateRoastLabel);
+    updateRoastLabel();
   }
 });
 
