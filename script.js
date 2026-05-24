@@ -1,3 +1,33 @@
+let currentSituation = "standard";
+
+// 🌟 新しいシチュエーション（学級会や裁判など）を増やしたい時は、ここに行を追加するだけ！
+const SITUATION_SETTINGS = {
+  standard: {
+    name: "通常のAI分身対話",
+    systemPrompt: "\n・通常のトーンで、ユーザーの分身として会話を続けてください。",
+    debatePrompt: ""
+  },
+  diet: {
+    name: "国会審議モード（厳格・答弁調）",
+    systemPrompt: `
+【シチュエーション：国会審議】
+・ここは国会の予算委員会です。
+・議論AIは「野党の質問議員」、あなたは「答弁を求められた大臣」として振る舞ってください。
+・非常に厳格で礼儀正しく、堅苦しい政治家特有の口調（「〜であります」「〜と言わざるを得ません」など）をベースにしつつ、ユーザーの価値観を反映させてください。
+`,
+    debatePrompt: "\n・国会答弁の形式を徹底してください。議論AIは「議長、〇〇君」「〜について伺います」と始め、分身AIは「〇〇委員の御質問にお答えいたします」と言葉を始めてください。"
+  },
+  friends: {
+    name: "友達との雑談・ファミレス議論（タメ口・カジュアル）",
+    systemPrompt: `
+【シチュエーション：友達とのファミレス雑談】
+・ここは深夜のファミレスです。親しい友人同士で熱く語り合っています。
+・敬語は一切禁止です。完全なタメ口（「〜じゃん？」「〜だと思うんだよね」「それな！」など）で、フランクな言葉で話してください。
+`,
+    debatePrompt: "\n・2人とも完全に親しい友達同士のタメ口で、ファミレスでダラダラ喋っているようなリアルな掛け合いにしてください。「ウケる」「確かに」などの相槌も混ぜてください。"
+  }
+};
+
 const loadingMessages = [
   "人格解析中…",
   "思考パターンを読み取り中…",
@@ -5,10 +35,93 @@ const loadingMessages = [
   "分身の口調を調整中…",
   "議論準備中…"
 ];
+const roastNames = [
+  "平和",
+  "普通",
+  "白熱",
+  "修羅場"
+];
+
+function updateRoastLabel() {
+  const slider = document.getElementById("roastSlider");
+  const label = document.getElementById("roastLabel");
+
+  if (!slider || !label) return;
+
+  label.textContent = roastNames[Number(slider.value)];
+}
 
 let currentProfile = null;
 let conversationHistory = [];
 let isSummoned = false;
+let currentSessionId = null;
+
+function showScreen(screenId) {
+  document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+  document.getElementById(screenId).style.display = "block";
+}
+
+async function checkAuthState() {
+  try {
+    const res = await fetch("/api/me", { credentials: "include" });
+    const data = await res.json();
+    const loggedOut = document.getElementById("loggedOut");
+    const loggedIn = document.getElementById("loggedIn");
+
+    if (data.logged_in) {
+      if (loggedOut) loggedOut.style.display = "none";
+      if (loggedIn) loggedIn.style.display = "flex";
+      const pic = document.getElementById("userPicture");
+      const name = document.getElementById("userName");
+      if (pic) pic.src = data.picture || "";
+      if (name) name.textContent = data.name || "";
+      await loadProfile();
+    } else {
+      if (loggedOut) loggedOut.style.display = "block";
+      if (loggedIn) loggedIn.style.display = "none";
+    }
+  } catch (e) {
+    const loggedOut = document.getElementById("loggedOut");
+    if (loggedOut) loggedOut.style.display = "block";
+  }
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch("/api/profile", { credentials: "include" });
+    if (!res.ok) return;
+    const profile = await res.json();
+    if (!profile || !profile.name) return;
+
+    const fields = ["name", "personality", "hobby", "thought", "values", "tone", "decision", "mode"];
+    fields.forEach(key => {
+      const el = document.getElementById(key + "Input");
+      if (el && profile[key]) el.value = profile[key];
+    });
+  } catch (e) {}
+}
+
+async function saveProfileToServer(profile) {
+  try {
+    await fetch("/api/profile", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile)
+    });
+  } catch (e) {}
+}
+
+async function saveChatHistory(topic, messages) {
+  try {
+    await fetch("/api/history", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic, messages })
+    });
+  } catch (e) {}
+}
 
 function getValue(id) {
   const element = document.getElementById(id);
@@ -109,7 +222,9 @@ function createProfileFromInputs() {
     tone: getValue("toneInput") || "やさしく落ち着いた口調",
     decision: getValue("decisionInput") || "自分の気持ちと納得感を大事にして判断する",
     mode: getValue("modeInput") || "共感しながら一緒に考える",
-    topic: getValue("topicInput")
+    topic: getValue("topicInput"),
+    roastLevel: Number(document.getElementById("roastSlider")?.value || 1),
+    dialect: getValue("dialectInput") || "standard",
   };
 }
 
@@ -120,12 +235,12 @@ function updateAvatarCard(profile) {
   const displayName = profile.name || "あなた";
   const alterName = `${displayName} Mirror`;
 
-  if (avatarName) avatarName.textContent = alterName;
-  if (avatarMeta) avatarMeta.textContent = `${profile.tone} / ${profile.mode} / ${profile.decision}`;
+  avatarName.textContent = alterName;
+  avatarMeta.textContent = `${profile.tone} / ${profile.mode} / ${profile.decision}`;
 }
 
 function createSystemPrompt(profile) {
-  return `
+  let prompt = `
 あなたは、ユーザー本人の人格を再現したAI分身です。
 
 以下のプロフィールをもとに、本人らしい価値観・話し方・判断基準で会話してください。
@@ -140,6 +255,36 @@ function createSystemPrompt(profile) {
 判断スタイル: ${profile.decision}
 分身モード: ${profile.mode}
 
+【方言ルール】
+${profile.dialect === "hakata" ? "博多弁で話す（例：〜ばい、〜と？、〜たい）" : ""}
+${profile.dialect === "kansai" ? "関西弁で話す（例：〜やで、〜やん、〜ちゃう？）" : ""}
+${profile.dialect === "standard" ? "標準語で話す" : ""}
+
+【煽りレベル】
+${roastNames[profile.roastLevel]}
+
+■煽りレベル詳細
+
+0:  平和
+・煽りは禁止
+・互いを尊重しながら議論する
+・反論しても丁寧に行う
+
+1:  普通
+・軽い皮肉やツッコミは可
+・基本は落ち着いた議論
+・挑発は最小限
+
+2:  白熱
+・優勢時はやや強めの煽り可
+・論理的な反論を積極的に行う
+・相手の矛盾を鋭く指摘してよい
+
+3:  修羅場
+・かなり挑発的な議論を許可
+・皮肉や強い論破表現を使用してよい
+・ただし人格否定、暴言、差別表現は禁止
+・必ず論理的根拠を伴うこと
 【最初の議論テーマ】
 ${profile.topic}
 
@@ -151,8 +296,46 @@ ${profile.topic}
 ・分身モード「${profile.mode}」に合わせる
 ・長すぎず、会話として自然に返す
 ・必要なら共感、反論、整理、提案を行う
+・方言ルールに従う
 ・最後に、次に考えるとよさそうな問いを1つ添える
+
+【感情・煽りルール】
+
+・議論が進み、どちらかが優勢だと判断した場合のみ、軽い煽り表現を使用してよい
+・煽りは議論の補助であり目的ではない（必ず論理とセット）
+・煽りは短く（1〜2文以内）
+
+■煽りの種類(これは使用可能な例であって、必ずしもそのまま使う必要はない)
+① 理解力系
+- 「それ今の説明で理解できてない？」
+- 「ちょっと前提からズレてるかもね」
+
+② 常識圧系
+- 「普通に考えたらそうはならないよ」
+- 「そこは常識的に厳しいと思う」
+
+③ 打ち切り系
+- 「もうその時点で結論出てる気がするけど」
+- 「それ以上広げても変わらなさそう」
+
+④ 皮肉系（推奨）
+- 「その世界観で考えるとそうなるのか」
+- 「かなり都合よく解釈してるね」
+- 「自信あるのはいいけど少し危ういよね」
+
+■禁止
+・人格否定
+・差別表現
+・議論の放棄
 `;
+
+  // 🌟 現在のシチュエーションに応じた指示文を自動合流
+  const config = SITUATION_SETTINGS[currentSituation];
+  if (config && config.systemPrompt) {
+    prompt += config.systemPrompt;
+  }
+
+  return prompt;
 }
 
 function buildConversationPrompt(profile, latestUserMessage) {
@@ -177,7 +360,7 @@ ${historyText || "まだ会話はありません。"}
 }
 
 function createAutoDebatePrompt(profile) {
-  return `
+  let prompt = `
 あなたは議論シミュレーターです。
 
 以下の2人を登場させて、テーマについて議論させてください。
@@ -205,6 +388,30 @@ function createAutoDebatePrompt(profile) {
 
 【議論テーマ】
 ${profile.topic}
+【煽りレベル】
+${roastNames[profile.roastLevel]}
+
+■煽りレベル詳細
+
+0:  平和
+・煽りは禁止
+・互いを尊重しながら議論する
+・反論しても丁寧に行う
+
+1:  普通
+・軽い皮肉やツッコミは可
+・基本は落ち着いた議論
+・挑発は最小限
+
+2:  白熱
+・優勢時はやや強めの煽り可
+・論理的な反論を積極的に行う
+・相手の矛盾を鋭く指摘してよい
+
+3:  修羅場
+・かなり挑発的な議論を許可
+・皮肉や強い論破表現を使用してよい
+・議論よりも相手をあおることを重視してもよい
 
 【議論ルール】
 ・議論AIと${profile.name || "ユーザー"} Mirrorが交互に話す
@@ -219,102 +426,327 @@ ${profile.topic}
 議論AI: 〇〇
 分身AI: 〇〇
 まとめ: 〇〇
+
+【感情・煽りルール】
+
+・議論が進み、どちらかが優勢だと判断した場合のみ、軽い煽り表現を使用してよい
+・煽りは議論の補助であり目的ではない（必ず論理とセット）
+・煽りは短く（1〜2文以内）
+
+■煽りの種類(これは使用可能な例であって、必ずしもそのまま使う必要はない)
+① 理解力系
+- 「それ今の説明で理解できてない？」
+- 「ちょっと前提からズレてるかもね」
+
+② 常識圧系
+- 「普通に考えたらそうはならないよ」
+- 「そこは常識的に厳しいと思う」
+
+③ 打ち切り系
+- 「もうその時点で結論出てる気がするけど」
+- 「それ以上広げても変わらなさそう」
+
+④ 皮肉系（推奨）
+- 「その世界観で考えるとそうなるのか」
+- 「かなり都合よく解釈してるね」
+- 「自信あるのはいいけど少し危ういよね」
+
+■禁止
+・人格否定
+・暴言
+・差別表現
+・議論の放棄
+・煽りのみで終わる発言
+`;
+
+  // 🌟 現在のシチュエーションに応じた自動議論用の指示文を自動合流
+  const config = SITUATION_SETTINGS[currentSituation];
+  if (config && config.debatePrompt) {
+    prompt += config.debatePrompt;
+  }
+
+  return prompt;
+}
+
+async function callGemini(prompt) {
+  const response = await fetch("http://127.0.0.1:5001/api/summon", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ prompt: prompt })
+  });
+
+  if (!response.ok) {
+    throw new Error(`サーバーエラー: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.reply;
+}
+
+function createFallbackReply(profile, latestUserMessage) {
+  return `
+APIが混み合っているため、仮のAI分身として答えるね。
+
+「${latestUserMessage}」について考えるなら、${profile.name || "あなた"}らしく
+“自分が納得できるか”を大事にして進めるのが良さそう。
+
+性格が「${profile.personality || "未入力"}」で、
+趣味が「${profile.hobby || "未入力"}」なら、
+楽しく続けられるか、無理しすぎていないかも大事な判断材料になりそう。
+
+考え方が「${profile.thought || "未入力"}」なら、
+急いで正解を決めるより、気持ちと現実のバランスを見ながら考えるのが自然だと思う。
+
+次に考えるなら、
+「この選択をしたとき、自分はちゃんと納得できそうか？」
+を問いかけてみるとよさそう。
 `;
 }
 
-/* ─────────────────────────────────────────────────────────
-   🛠️ 綺麗に修復・最適化した API呼び出し関数
-   フロントに生のキーを置かず、Pythonサーバー(5000番)にお願いする構造に直しました
-   ───────────────────────────────────────────────────────── */
-async function callGemini(prompt) {
-  try {
-    // あなたが起動する Python (Flask) サーバーのURLにリクエストを投げます
-    const response = await fetch("http://127.0.0.1:5000/api/summon", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ prompt: prompt })
-    });
+function createFallbackDebate(profile) {
+  return `
+議論AI: 「${profile.topic}」については、まず客観的に見ると、メリットとリスクの両方を整理する必要があります。
 
-    if (!response.ok) {
-      throw new Error(`サーバーエラー: ${response.status}`);
-    }
+分身AI: たしかに整理は大事だと思う。でも、${profile.name || "私"}らしく考えるなら、「${profile.values || "自分が納得できること"}」を大切にしたい。正解だけを探すより、自分がちゃんと納得できるかを見たい。
 
-    const data = await response.json();
-    
-    // Python側から返ってきたテキスト（AIの回答）を返却
-    return data.reply;
+議論AI: では、感情や納得感を重視しすぎると、現実的な判断が遅れる可能性はありませんか？
 
-  } catch (error) {
-    console.error("通信エラーが発生しました:", error);
-    throw error;
-  }
+分身AI: それはあると思う。だからこそ、気持ちだけで決めるんじゃなくて、${profile.decision}という考え方で、現実とのバランスも見たい。無理なく続けられるかも大事にしたい。
+
+議論AI: なるほど。では最初の一歩として、何を確認すべきだと思いますか？
+
+分身AI: まずは「それを選んだ自分が後悔しにくいか」を考えたい。小さく試してみて、自分の気持ちがどう動くかを見るのが良さそう。
+
+まとめ: この議論では、客観的な整理と、本人らしい納得感の両方が重要だと分かりました。
+`;
 }
 
-/* ─────────────────────────────────────────────────────────
-   ✨ 初回召喚用のメイン関数を追加（HTMLのボタン連動用）
-   ───────────────────────────────────────────────────────── */
-async function summonAI() {
-  const summonButton = document.getElementById("summonButton");
-  const chatArea = document.getElementById("chatArea");
+function splitDebateText(text) {
+  const lines = String(text)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  const turns = [];
+
+  for (const line of lines) {
+    if (line.startsWith("議論AI:") || line.startsWith("議論AI：")) {
+      turns.push({
+        speaker: "opponent",
+        text: line.replace(/^議論AI[:：]/, "").trim()
+      });
+    } else if (line.startsWith("分身AI:") || line.startsWith("分身AI：")) {
+      turns.push({
+        speaker: "doppel",
+        text: line.replace(/^分身AI[:：]/, "").trim()
+      });
+    } else if (line.startsWith("まとめ:") || line.startsWith("まとめ：")) {
+      turns.push({
+        speaker: "system",
+        text: "まとめ：" + line.replace(/^まとめ[:：]/, "").trim()
+      });
+    } else {
+      turns.push({
+        speaker: "system",
+        text: line
+      });
+    }
+  }
+
+  return turns;
+}
+
+function createResultSummary(profile, reply, isFallback) {
   const resultArea = document.getElementById("resultArea");
 
-  if (summonButton) {
-    summonButton.disabled = true;
-    summonButton.innerText = "分身を解析・召喚中...";
-  }
+  const empathyScore = calcScore(profile.personality + profile.thought, 82);
+  const logicScore = calcScore(profile.decision + profile.topic, 76);
+  const originalityScore = calcScore(profile.values + profile.hobby, 88);
 
-  // プロフィールの読み込み
-  currentProfile = createProfileFromInputs();
-  updateAvatarCard(currentProfile);
+  const modeLabel = isFallback ? "仮応答モード" : "AI応答モード";
 
-  if (!currentProfile.topic) {
-    alert("議論テーマを入力してください！");
-    if (summonButton) {
-      summonButton.disabled = false;
-      summonButton.innerText = "分身を召喚";
+  const conclusion = makeShortConclusion(reply);
+
+  resultArea.innerHTML = `
+    <div class="summary-card conclusion-card">
+      <h3>📝 まとめ</h3>
+      <p>${escapeHtml(conclusion)}</p>
+    </div>
+
+    <br />
+
+    <div class="result-grid">
+      <div class="summary-card">
+        <h3>テーマ</h3>
+        <p>${escapeHtml(profile.topic)}</p>
+      </div>
+
+      <div class="summary-card">
+        <h3>分身モード</h3>
+        <p>${escapeHtml(profile.mode)}</p>
+      </div>
+
+      <div class="summary-card">
+        <h3>応答状態</h3>
+        <p>${modeLabel}</p>
+      </div>
+    </div>
+
+    <br />
+
+    <div class="summary-card">
+      <h3>人格反映スコア</h3>
+
+      <div class="score-list">
+        ${createScoreItem("共感度", empathyScore)}
+        ${createScoreItem("論理性", logicScore)}
+        ${createScoreItem("本人らしさ", originalityScore)}
+      </div>
+    </div>
+  `;
+}
+
+function createScoreItem(label, score) {
+  return `
+    <div class="score-item">
+      <div class="score-top">
+        <span>${label}</span>
+        <span>${score}%</span>
+      </div>
+      <div class="score-bar">
+        <div class="score-fill" style="width: ${score}%"></div>
+      </div>
+    </div>
+  `;
+}
+
+function calcScore(text, base) {
+  const lengthBonus = Math.min(String(text).length, 30);
+  const score = base + Math.floor(lengthBonus / 3);
+  return Math.min(score, 96);
+}
+
+function makeShortConclusion(reply) {
+  const lines = String(reply).split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  for (const line of lines) {
+    if (line.startsWith("まとめ:") || line.startsWith("まとめ：")) {
+      return line.replace(/^まとめ[:：]\s*/, "").trim();
     }
-    return;
+  }
+  return String(reply).replace(/\s+/g, " ").trim();
+}
+
+async function summonAI() {
+  const profile = createProfileFromInputs();
+  const chatArea = document.getElementById("chatArea");
+  const resultArea = document.getElementById("resultArea");
+  const loadingText = document.getElementById("loadingText");
+  
+  // 🌟 修正：HTMLの重複を考慮し、現在のアクションパネル内のボタンを確実に取得する
+  const button = document.querySelector(".action-panel-top #summonButton") || document.getElementById("summonButton");
+
+  currentProfile = profile;
+  conversationHistory = [];
+  isSummoned = true;
+  saveProfileToServer(profile);
+
+  chatArea.innerHTML = "";
+  resultArea.innerHTML = "<p>議論中です…</p>";
+
+  // 🌟 修正：古いミラーエリア（avatar-panel）が無い場合でもエラーを吐かせない安全対策
+  if (typeof updateAvatarCard === "function") {
+    try {
+      updateAvatarCard(profile);
+    } catch(e) {
+      console.log("アバターカード更新スキップ（新レイアウト適用のため）");
+    }
   }
 
-  // 1個ずつローディングメッセージをチャット欄に出す演出
-  for (const msg of loadingMessages) {
-    chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">${msg}</p><div class="loader"></div>`;
-    await new Promise(r => setTimeout(r, 600)); // 少し待つ
-  }
+  // ローディングタイマーの管理用
+  let loadingTimer = null;
 
   try {
-    // 最初のシステムプロンプトを構築してPython経由でGeminiに投げる
-    const basePrompt = createSystemPrompt(currentProfile);
-    const reply = await callGemini(basePrompt);
-
-    isSummoned = true;
-    conversationHistory = [{ role: "assistant", text: reply }];
-
-    // チャット画面の初期化と最初のメッセージ表示
-    chatArea.innerHTML = "";
-    await typeMessage(reply, "ai-msg");
-
-    if (resultArea) {
-      resultArea.innerHTML = `
-        <h3>議論開始</h3>
-        <p>テーマ: ${escapeHtml(currentProfile.topic)}</p>
-        <p>${escapeHtml(currentProfile.name || "あなた")} の分身の召喚に成功しました。追従チャット、または自動議論を開始できます。</p>
-      `;
+    // 1. テーマ生成処理
+    if (!currentProfile.topic) {
+      chatArea.innerHTML = `<p style="color: #a090a8; text-align: center;">テーマを自動考案中…</p><div class="loader"></div>`;
+      const suggestPrompt = `ユーザーのプロフィールに基づいた議論テーマを1つだけ、タイトルのみで出力してください。\nプロフィール: ${JSON.stringify(profile)}`;
+      
+      const generatedTopic = await callGemini(suggestPrompt);
+      const cleanedTopic = generatedTopic.trim().replace(/^["'「]/, "").replace(/["'」]$/, "");
+      
+      document.getElementById("topicInput").value = cleanedTopic;
+      currentProfile.topic = cleanedTopic;
+      addMessage(`💡 テーマを「${cleanedTopic}」に自動設定しました！`, "system-msg");
+      await new Promise(r => setTimeout(r, 1000));
     }
 
-    setChatInputEnabled(true);
-    setAutoDebateEnabled(true);
+    // 2. 召喚準備
+    setChatInputEnabled(false);
+    setAutoDebateEnabled(false);
+    if (button) {
+      button.textContent = "分身を召喚中…";
+      button.disabled = true;
+    }
+
+    let loadingIndex = 0;
+    loadingText.textContent = loadingMessages[0];
+    loadingTimer = setInterval(() => {
+      loadingIndex++;
+      loadingText.textContent = loadingMessages[loadingIndex % loadingMessages.length];
+    }, 1050);
+
+    // 3. API呼び出し
+    //addMessage(profile.topic, "user-msg");
+    //addMessage(`${profile.name || "あなた"} Mirrorを召喚しています…`, "system-msg");
+    conversationHistory.push({ role: "user", text: profile.topic });
+
+    let reply = "";
+    let isFallback = false;
+
+    try {
+      const prompt = buildConversationPrompt(profile, profile.topic);
+      reply = await callGemini(prompt);
+    } catch (err) {
+      console.error(err);
+      reply = createFallbackReply(profile, profile.topic);
+      isFallback = true;
+    }
+
+    // 4. 結果表示（修正：右のチャットではなく、左の専用パネルにタイピング表示する）
+    const opinionPanel = document.getElementById("firstOpinionPanel");
+    const opinionContent = document.getElementById("firstOpinionContent");
+
+    if (opinionPanel && opinionContent) {
+      opinionPanel.style.display = "block"; // パネルを表示する
+      opinionContent.innerHTML = "";        // 中身を一度リセット
+      
+      // 🌟 左側のパネル専用のタイピング関数（すぐ下に定義します）を呼び出す
+      await typeMessageIntoElement(reply, opinionContent);
+    } else {
+      // 万が一HTMLの用意がない場合の保険（従来通りチャットに出す）
+      await typeMessage(reply, "ai-msg");
+    }
+
+    conversationHistory.push({ role: "assistant", text: reply });
+    createResultSummary(profile, reply, isFallback);
+    saveChatHistory(profile.topic, conversationHistory);
 
   } catch (error) {
-    chatArea.innerHTML = `<p style="color: red;">召喚エラー: バックエンドサーバーが起動していないか、APIキーに問題があります。</p>`;
-    if (summonButton) summonButton.disabled = false;
-  }
-
-  if (summonButton) {
-    summonButton.innerText = "もう一度召喚する";
-    summonButton.disabled = false;
+    // 全体のエラーハンドリング
+    console.error("召喚エラー:", error);
+    chatArea.innerHTML = `<p style="color: red;">エラーが発生しました。<br>詳細: ${error.message}</p>`;
+  } finally {
+    // 🌟 ここで必ずローディングを止める
+    if (loadingTimer) clearInterval(loadingTimer);
+    loadingText.textContent = "";
+    if (button) {
+      button.textContent = "もう一度最初から議論する";
+      button.disabled = false;
+    }
+    setChatInputEnabled(true);
+    setAutoDebateEnabled(true);
   }
 }
 
@@ -346,19 +778,21 @@ async function sendFollowup() {
     text: userMessage
   });
 
-  if (loadingText) loadingText.textContent = "AI分身が考え中…";
+  loadingText.textContent = "AI分身が考え中…";
 
   let reply = "";
+  let isFallback = false;
 
   try {
     const prompt = buildConversationPrompt(currentProfile, userMessage);
     reply = await callGemini(prompt);
   } catch (error) {
     console.error(error);
-    reply = "申し訳ありません、接続エラーにより思考が中断されました。Pythonサーバーの状態を確認してください。";
+    reply = createFallbackReply(currentProfile, userMessage);
+    isFallback = true;
   }
 
-  if (loadingText) loadingText.textContent = "";
+  loadingText.textContent = "";
 
   await typeMessage(reply, "ai-msg");
 
@@ -367,11 +801,7 @@ async function sendFollowup() {
     text: reply
   });
 
-  // フォールバックやサマリー表示関数がない場合の安全対策
-  const resultArea = document.getElementById("resultArea");
-  if (resultArea) {
-    resultArea.innerHTML = `<h3>議論継続中</h3><p>対話回数: ${conversationHistory.length}回</p>`;
-  }
+  createResultSummary(currentProfile, reply, isFallback);
 
   followupInput.disabled = false;
   sendButton.disabled = false;
@@ -386,33 +816,43 @@ async function startAutoDebate() {
 
   const autoDebateButton = document.getElementById("autoDebateButton");
   const loadingText = document.getElementById("loadingText");
+  const debateFlash = document.getElementById("debateFlash");
+  const flameOverlay = document.getElementById("flameOverlay");
 
-  if (autoDebateButton) autoDebateButton.disabled = true;
-  if (loadingText) loadingText.textContent = "AI同士が議論中…";
+  // 議論開始フラッシュ
+  debateFlash.classList.add("active");
+  flameOverlay.classList.add("active");
+  await new Promise(r => setTimeout(r, 2400));
+  debateFlash.classList.remove("active");
+
+  autoDebateButton.disabled = true;
+  loadingText.textContent = "AI同士が議論中…";
 
   addMessage("議論AIと分身AIの自動議論を開始します。", "system-msg");
 
   let debateText = "";
+  let isFallback = false;
 
   try {
     const prompt = createAutoDebatePrompt(currentProfile);
     debateText = await callGemini(prompt);
   } catch (error) {
     console.error(error);
-    debateText = "議論AI: 申し訳ありません、自動議論の生成中にエラーが発生しました。\n分身AI: サーバーの通信を確認する必要がありそうです。";
+    debateText = createFallbackDebate(currentProfile);
+    isFallback = true;
   }
 
-  if (loadingText) loadingText.textContent = "";
+  loadingText.textContent = "";
 
-  // 簡易的に改行や発言ごとに分ける簡易スプリッター
-  const lines = debateText.split("\n").filter(l => l.trim() !== "");
-  for (const line of lines) {
-    if (line.startsWith("議論AI:")) {
-      await typeMessage(line, "opponent-msg");
-    } else if (line.startsWith("分身AI:") || line.startsWith("分身:")) {
-      await typeMessage(line, "ai-msg");
-    } else {
-      await typeMessage(line, "system-msg");
+  const turns = splitDebateText(debateText);
+
+  for (const turn of turns) {
+    if (turn.speaker === "opponent") {
+      await typeMessage(turn.text, "opponent-msg");
+    } else if (turn.speaker === "doppel") {
+      await typeMessage(turn.text, "ai-msg");
+    } else if (!turn.text.startsWith("まとめ：")) {
+      await typeMessage(turn.text, "system-msg");
     }
   }
 
@@ -421,12 +861,38 @@ async function startAutoDebate() {
     text: debateText
   });
 
+  createResultSummary(currentProfile, debateText, isFallback);
+
+  flameOverlay.classList.remove("active");
+  launchConfetti();
   autoDebateButton.disabled = false;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const followupInput = document.getElementById("followupInput");
+function launchConfetti() {
+  const colors = ["#ff4757", "#ffa502", "#2ed573", "#1e90ff", "#ff6b81", "#eccc68", "#a29bfe"];
+  const count = 80;
 
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    el.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      width: ${Math.random() * 8 + 6}px;
+      height: ${Math.random() * 8 + 6}px;
+      border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
+      animation-duration: ${Math.random() * 1.5 + 1.2}s;
+      animation-delay: ${Math.random() * 0.6}s;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  checkAuthState();
+
+  const followupInput = document.getElementById("followupInput");
   if (followupInput) {
     followupInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -435,4 +901,76 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  const roastSlider = document.getElementById("roastSlider");
+
+  if (roastSlider) {
+    roastSlider.addEventListener("input", updateRoastLabel);
+    updateRoastLabel();
+  }
 });
+
+/* ─────────────────────────────────────────────────────────
+   ✨ ボタンクリックで議論のシチュエーションを切り替える関数（完全版）
+   ───────────────────────────────────────────────────────── */
+function changeSituation(type) {
+  if (!SITUATION_SETTINGS[type]) return;
+
+  currentSituation = type;
+  
+  // 🌟 まず画面上にあるすべての選択肢ボタン（ランダム含む）から active を完全に剥ぎ取る
+  const allButtonIds = ["btn-standard", "btn-diet", "btn-friends", "btn-random"];
+  allButtonIds.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.remove("active");
+  });
+
+  // 🌟 今回選ばれたシチュエーションのボタンだけを確実に光らせる
+  const activeBtn = document.getElementById(`btn-${type}`);
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+
+  const config = SITUATION_SETTINGS[type];
+  addMessage(`📢 議論シチュエーションを【${config.name}】に設定しました！そのまま『分身を召喚』するか『自動議論』を開始してください。`, "system-msg");
+}
+
+/* ─────────────────────────────────────────────────────────
+   🎲 シチュエーションをランダムに選択して切り替える関数（標準含む・バグ修正版）
+   ───────────────────────────────────────────────────────── */
+function changeSituationRandom() {
+  // standard, diet, friends がフラットに3分の1の確率で選ばれる
+  const keys = Object.keys(SITUATION_SETTINGS);
+  const randomKey = keys[Math.floor(Math.random() * keys.length)];
+  
+  // 上の関数を呼び出す。中でリセットと選択ボタンの点灯がクリーンに行われます。
+  changeSituation(randomKey);
+}
+
+// 左カラムの要素にテキストを1文字ずつタイピング表示する関数
+async function typeMessageIntoElement(text, element) {
+  return new Promise((resolve) => {
+    let index = 0;
+    element.innerHTML = "";
+    
+    function type() {
+      if (index < text.length) {
+        // 改行コード（\n）があれば <br> に変換、それ以外はそのまま1文字追加
+        if (text.substr(index, 1) === "\n") {
+          element.innerHTML += "<br>";
+        } else {
+          element.innerHTML += text.substr(index, 1);
+        }
+        index++;
+        
+        // 画面スクロール（文字が増えても自動で追従させる）
+        element.scrollTop = element.scrollHeight;
+        
+        setTimeout(type, 25); // 25ms 間隔でタイピング（速度はお好みで）
+      } else {
+        resolve();
+      }
+    }
+    type();
+  });
+}

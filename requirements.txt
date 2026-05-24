@@ -1,2 +1,7 @@
-google-genai #geminiapiクライアント
-python-dotenv #環境変数を管理するためのライブラリ
+google-genai
+python-dotenv
+flask
+flask-cors
+authlib
+flask-login
+requests

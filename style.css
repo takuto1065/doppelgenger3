@@ -95,6 +95,209 @@ select {
   margin-bottom: 28px;
 }
 
+/* =========================
+   Screen / Navigation
+========================= */
+.screen {
+  width: 100%;
+}
+
+.title-wrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+  padding: 40px 20px;
+}
+
+.title-logo {
+  margin: 0;
+  color: #70a2da;
+  font-size: clamp(36px, 7vw, 64px);
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 12px rgba(255,255,255,0.95), 0 0 18px rgba(150,190,230,0.22);
+}
+
+.title-sub {
+  margin: 0;
+  color: var(--text-pink);
+  font-size: 16px;
+}
+
+.title-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 12px;
+}
+
+.title-start-btn {
+  width: 100%;
+  padding: 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(120,160,210,0.32);
+  transition: 0.2s ease;
+}
+
+.title-start-btn:hover {
+  background: var(--blue-deep);
+  transform: translateY(-2px);
+}
+
+.title-how-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(185,210,235,0.82);
+  background: rgba(255,255,255,0.88);
+  color: #7196c7;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.title-how-btn:hover {
+  background: #eef7ff;
+  transform: translateY(-1px);
+}
+
+.howto-wrap {
+  min-height: 100vh;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.back-button {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  border: 1px solid rgba(185,210,235,0.82);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.88);
+  color: #7196c7;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.back-button:hover {
+  background: #eef7ff;
+}
+
+.howto-title {
+  color: var(--text-strong);
+  font-size: 28px;
+  margin: 0 0 28px;
+}
+
+.howto-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.howto-step {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 20px;
+  background: rgba(255,255,255,0.84);
+  border: 1px solid rgba(255,255,255,0.92);
+  border-radius: 20px;
+  box-shadow: 0 8px 22px rgba(150,170,200,0.12);
+}
+
+.howto-step-num {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.howto-step-body h3 {
+  margin: 0 0 6px;
+  color: var(--text-strong);
+  font-size: 16px;
+}
+
+.howto-step-body p {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.howto-tip {
+  padding: 16px 20px;
+  background: rgba(240,248,255,0.9);
+  border: 1px solid rgba(185,210,235,0.82);
+  border-radius: 16px;
+  color: #6b8ab0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.auth-area {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.login-button {
+  display: inline-block;
+  padding: 8px 20px;
+  background: #4285f4;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login-button:hover { background: #3367d6; }
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.logout-button {
+  color: #888;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.logout-button:hover { text-decoration: underline; }
+
 .eyebrow {
   display: inline-block;
   margin: 0 0 10px;
@@ -139,7 +342,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
   gap: 22px;
-  align-items: stretch;
+  align-items: stretch; /* 左の高さに合わせる設定は残す */
 }
 
 /*
@@ -147,6 +350,8 @@ select {
 */
 .form-panel {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /*
@@ -470,7 +675,8 @@ select:focus {
   これで右側の下の空白が減る。
 */
 .chat-panel {
-  flex: 1;
+  /* 💡重要：flex: 1 から「height: 500px;」などの固定値に変更します */
+  height: 500px; /* パソコン画面で見た時にちょうどいい高さに固定（450px〜550pxがおすすめ） */
   min-height: 0;
 
   display: flex;
@@ -484,16 +690,14 @@ select:focus {
 */
 .chat-area {
   flex: 1;
-  min-height: 0;
   overflow-y: auto;
-
+  min-height: 0;
+  margin-bottom: 15px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-
-  padding: 2px 4px 4px 0;
+  padding: 2px 8px 4px 0;
 }
-
 .empty-state {
   margin: auto;
   text-align: center;
@@ -725,13 +929,54 @@ select:focus {
 /* =========================
    Responsive
 ========================= */
+/* =========================
+   Main Layout & Columns (デスクトップ向け：左右50%等分割)
+========================= */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 左右を 50% ずつ美しく等分割 */
+  gap: 22px;
+  align-items: start; /* 上詰めで配置 */
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 左カラム：3つのブロック（プロフィール・設定・召喚）を縦に綺麗に並べる */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 右カラム：ステータスとチャットを縦に並べ、チャットを長くする */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+/* 💡 チャットパネルを右側いっぱいに伸ばしてスクロール可能にする設定 */
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 600px; /* 右側の「議論の続き」をしっかり見せるための高さ */
+}
+
+/* =========================
+   Main Layout & Columns (デスクトップ向け：左右50%等分割)
+========================= */
 @media (max-width: 900px) {
   body {
     padding: 16px;
   }
 
+  /* タブレット・スマホ画面では、左右分割ではなく縦1列に綺麗に並べる */
   .main-layout {
     grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 10px;
     align-items: start;
   }
 
@@ -740,16 +985,20 @@ select:focus {
   }
 
   .side-column {
-    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+    height: 100%;
+    justify-content: flex-start;
   }
 
-  /*
-    スマホ・タブレットでは画面に合わせて固定高さにする。
-    長くなったらチャット内だけスクロール。
-  */
   .chat-panel {
-    flex: none;
-    height: 470px;
+    flex: 1;
+    min-height: 0;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
   }
 
   .result-grid {
@@ -847,4 +1096,342 @@ select:focus {
     width: 100%;
     padding: 13px 16px;
   }
+}
+/* 分身の意見パネル */
+.opinion-panel {
+  margin-top: 16px;
+}
+
+.opinion-title {
+  font-size: 0.9rem;
+  color: #a090a8;
+  margin: 0 0 8px;
+}
+
+.opinion-content {
+  height: 260px;
+  overflow-y: auto;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(185, 210, 235, 0.7);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-main);
+}
+
+.dialect-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.dialect-selector select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 210, 230, 0.6);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text-main);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 🏛️ シチュエーションボタン */
+.button-group button,
+.situation-selector button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background-color: #edf2f7 !important;
+  border: 1px solid rgba(190, 210, 230, 0.5) !important;
+  color: #718096 !important;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.button-group button:hover,
+.situation-selector button:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e0 !important;
+  transform: translateY(-1px);
+}
+
+.button-group button.active,
+.situation-selector button.active {
+  background-color: #d0e2ff !important;
+  color: #3d5a80 !important;
+  border: 1px solid #a4c4ff !important;
+  box-shadow: 0 4px 12px rgba(143, 185, 232, 0.25) !important;
+  transform: scale(1.03);
+}
+
+/* =========================
+   Roast Slider
+========================= */
+
+.slider-container {
+  margin-top: 16px;
+  margin-bottom: 18px;
+}
+
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.slider-title {
+  color: #697184;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.roast-label {
+  color: #aa7f98;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* スライダー本体 */
+#roastSlider {
+  width: 100%;
+  margin: 0;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  height: 8px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #bfe3ff 0%,
+      #8fb9e8 35%,
+      #f4b8d2 70%,
+      #ff8ea8 100%
+    );
+
+  border-radius: 999px;
+  outline: none;
+}
+
+/* ツマミ（Chrome / Safari） */
+#roastSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+  border: 3px solid white;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 12px rgba(120, 160, 210, 0.25),
+    0 0 0 4px rgba(255,255,255,0.35);
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#roastSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+
+/* Firefox対応 */
+#roastSlider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: white;
+  cursor: pointer;
+}
+
+/* 説明文 */
+.roast-description {
+  margin-top: 10px;
+
+  color: #8f97a8;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* =========================
+   議論開始エフェクト
+========================= */
+
+#debateFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(255, 80, 0, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+#debateFlash.active {
+  animation: flashFadeInOut 2.4s ease forwards;
+}
+
+.flash-text {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 900;
+  color: #fff;
+  text-shadow:
+    0 0 20px rgba(255, 120, 0, 1),
+    0 0 50px rgba(255, 60, 0, 0.9),
+    0 0 100px rgba(255, 30, 0, 0.6);
+  letter-spacing: 0.08em;
+  transform: scale(0);
+  opacity: 0;
+  animation: none;
+}
+
+#debateFlash.active .flash-text {
+  animation: flashTextPop 2.4s ease forwards;
+}
+
+@keyframes flashFadeInOut {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes flashTextPop {
+  0%   { transform: scale(0.2) rotate(-8deg); opacity: 0; }
+  20%  { transform: scale(1.25) rotate(3deg);  opacity: 1; }
+  35%  { transform: scale(0.95) rotate(0deg);  opacity: 1; }
+  70%  { transform: scale(1)    rotate(0deg);  opacity: 1; }
+  100% { transform: scale(1.1)  rotate(0deg);  opacity: 0; }
+}
+
+/* =========================
+   炎オーバーレイ
+========================= */
+
+#flameOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  box-shadow:
+    inset 0 0 60px 20px rgba(255, 50, 0, 0.45),
+    inset 0 0 120px 40px rgba(255, 100, 0, 0.2);
+}
+
+#flameOverlay.active {
+  opacity: 1;
+  animation: flameFlicker 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes flameFlicker {
+  from {
+    box-shadow:
+      inset 0 0 50px 15px rgba(255, 50, 0, 0.4),
+      inset 0 0 100px 35px rgba(255, 90, 0, 0.18);
+  }
+  to {
+    box-shadow:
+      inset 0 0 80px 30px rgba(255, 30, 0, 0.65),
+      inset 0 0 150px 55px rgba(255, 110, 0, 0.28);
+  }
+}
+
+/* =========================
+   クラッカー紙吹雪
+========================= */
+
+.confetti-piece {
+  position: fixed;
+  top: -10px;
+  z-index: 9990;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* =========================
+   まとめカード強調
+========================= */
+
+.conclusion-card {
+  border: 2px solid rgba(143, 185, 232, 0.5);
+  background: linear-gradient(135deg, rgba(237, 247, 255, 0.9), rgba(255, 241, 247, 0.9));
+}
+
+.conclusion-card h3 {
+  font-size: 1.1rem;
+  color: var(--text-strong);
+}
+
+.conclusion-card p {
+  font-size: 0.97rem;
+  line-height: 1.8;
+  color: var(--text-main);
+}
+
+/* =========================================================
+   最下部に追記：右上アクションボタン & シチュエーションボタンバグ修正
+   ========================================================= */
+.action-panel-top {
+  display: flex;
+  flex-direction: column; /* ボタンを縦に2つ並べる */
+  gap: 12px;              /* ボタン同士の隙間 */
+  padding: 20px;
+  background: var(--panel);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;         /* チャットに押されて潰れないように固定 */
+}
+
+/* ＝ 1枚目の画像バグ対策：シチュエーションボタンのスタイルを上書き強制 ＝ */
+.button-group button {
+  padding: 8px 16px !important;
+  border-radius: 999px !important;
+  background-color: #edf2f7 !important; /* 初期状態は優しい薄グレー */
+  border: 1px solid rgba(190, 210, 230, 0.5) !important;
+  color: #718096 !important;             /* 文字を読みやすいグレーに */
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-group button:hover {
+  background-color: #e2e8f0 !important;
+  color: #4a5568 !important;
+}
+
+/* 🔵 選択されている（現在アクティブな）ボタンのパステルブルー化 */
+.button-group button.active {
+  background-color: #d0e2ff !important; /* 優しいパステルブルー */
+  color: #3d5a80 !important;            /* 濃いブルーの文字 */
+  border: 1px solid #a4c4ff !important;
+  box-shadow: 0 4px 12px rgba(143, 185, 232, 0.25) !important;
+  transform: scale(1.02);
 }
