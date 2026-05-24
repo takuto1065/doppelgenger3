@@ -1065,3 +1065,100 @@ select:focus {
 .situation-selector button {
   transition: all 0.2s ease;
 }
+
+/* =========================
+   Roast Slider
+========================= */
+
+.slider-container {
+  margin-top: 16px;
+  margin-bottom: 18px;
+}
+
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.slider-title {
+  color: #697184;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.roast-label {
+  color: #aa7f98;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* スライダー本体 */
+#roastSlider {
+  width: 100%;
+  margin: 0;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  height: 8px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #bfe3ff 0%,
+      #8fb9e8 35%,
+      #f4b8d2 70%,
+      #ff8ea8 100%
+    );
+
+  border-radius: 999px;
+  outline: none;
+}
+
+/* ツマミ（Chrome / Safari） */
+#roastSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+  border: 3px solid white;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 12px rgba(120, 160, 210, 0.25),
+    0 0 0 4px rgba(255,255,255,0.35);
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#roastSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+
+/* Firefox対応 */
+#roastSlider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: white;
+  cursor: pointer;
+}
+
+/* 説明文 */
+.roast-description {
+  margin-top: 10px;
+
+  color: #8f97a8;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
