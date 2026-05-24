@@ -1,7 +1,11 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "app.db")
+# Vercel's filesystem is read-only except /tmp
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/app.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "..", "app.db")
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
