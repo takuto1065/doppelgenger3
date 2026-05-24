@@ -95,6 +95,47 @@ select {
   margin-bottom: 28px;
 }
 
+.auth-area {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.login-button {
+  display: inline-block;
+  padding: 8px 20px;
+  background: #4285f4;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login-button:hover { background: #3367d6; }
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.logout-button {
+  color: #888;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.logout-button:hover { text-decoration: underline; }
+
 .eyebrow {
   display: inline-block;
   margin: 0 0 10px;
@@ -139,7 +180,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
   gap: 22px;
-  align-items: stretch;
+  align-items: stretch; /* 左の高さに合わせる設定は残す */
 }
 
 /*
@@ -470,7 +511,8 @@ select:focus {
   これで右側の下の空白が減る。
 */
 .chat-panel {
-  flex: 1;
+  /* 💡重要：flex: 1 から「height: 500px;」などの固定値に変更します */
+  height: 500px; /* パソコン画面で見た時にちょうどいい高さに固定（450px〜550pxがおすすめ） */
   min-height: 0;
 
   display: flex;
@@ -485,15 +527,13 @@ select:focus {
 .chat-area {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: auto; /* 溢れたメッセージをスクロールさせる */
 
   display: flex;
   flex-direction: column;
   gap: 12px;
-
-  padding: 2px 4px 4px 0;
+  padding: 2px 8px 4px 0;
 }
-
 .empty-state {
   margin: auto;
   text-align: center;
@@ -740,17 +780,28 @@ select:focus {
   }
 
   .side-column {
-    height: auto;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  height: 100%;
+  
+  /* 💡ここを追加：中身のパネルが縦に引き伸ばされるのをストップする */
+  justify-content: flex-start; 
+}
 
   /*
     スマホ・タブレットでは画面に合わせて固定高さにする。
     長くなったらチャット内だけスクロール。
   */
   .chat-panel {
-    flex: none;
-    height: 470px;
-  }
+  flex: 1;
+  min-height: 0;
+  height: 600px; /* 💡PC全画面時のお好みの高さ（例: 550px〜650px辺りがおすすめ） */
+
+  display: flex;
+  flex-direction: column;
+}
 
   .result-grid {
     grid-template-columns: 1fr;
@@ -848,16 +899,130 @@ select:focus {
     padding: 13px 16px;
   }
 }
-/* 🏛️ シチュエーションボタンが選択されている時のスタイル */
-.situation-selector button.active {
-  background-color: #e2e8f0 !important; /* 背景を明るい白ベースに */
-  color: #1a202c !important;            /* 文字を濃い色にして目立たせる */
-  box-shadow: 0 0 0 3px #9f7aea;         /* 紫色の綺麗な光る枠線をつける */
-  font-weight: bold;
-  transform: scale(1.05);                /* 少しだけボタンを大きくする */
+/* 🏛️ シチュエーションボタン：通常時は淡いパステル色を適用 */
+.situation-selector button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  
+  /* 変更点：ボタンのベース色を薄いグレーブルーに設定 */
+  background-color: #edf2f7 !important; 
+  /* 変更点：枠線を薄くして主張を抑える */
+  border: 1px solid rgba(190, 210, 230, 0.5) !important;
+  color: #718096 !important; /* 少し濃い文字色で読みやすく */
+  
+  transition: all 0.25s ease;
+  cursor: pointer;
+  font-weight: 700;
 }
 
-/* ついでにボタンの隙間やポインターの基本設定 */
-.situation-selector button {
-  transition: all 0.2s ease;
+/* ホバーした時：少しだけ色を濃くして反応を示す */
+.situation-selector button:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e0 !important;
+  transform: translateY(-1px);
+}
+
+/* 選択されている時（.active）：明るいパステルブルーで強調 */
+.situation-selector button.active {
+  background-color: #d0e2ff !important;
+  color: #3d5a80 !important;
+  border: 1px solid #a4c4ff !important;
+  box-shadow: inset 0 2px 4px rgba(130, 160, 200, 0.1) !important;
+}
+
+/* =========================
+   Roast Slider
+========================= */
+
+.slider-container {
+  margin-top: 16px;
+  margin-bottom: 18px;
+}
+
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.slider-title {
+  color: #697184;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.roast-label {
+  color: #aa7f98;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* スライダー本体 */
+#roastSlider {
+  width: 100%;
+  margin: 0;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  height: 8px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #bfe3ff 0%,
+      #8fb9e8 35%,
+      #f4b8d2 70%,
+      #ff8ea8 100%
+    );
+
+  border-radius: 999px;
+  outline: none;
+}
+
+/* ツマミ（Chrome / Safari） */
+#roastSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+  border: 3px solid white;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 12px rgba(120, 160, 210, 0.25),
+    0 0 0 4px rgba(255,255,255,0.35);
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#roastSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+
+/* Firefox対応 */
+#roastSlider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: white;
+  cursor: pointer;
+}
+
+/* 説明文 */
+.roast-description {
+  margin-top: 10px;
+
+  color: #8f97a8;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
 }
