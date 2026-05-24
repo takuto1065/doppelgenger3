@@ -567,13 +567,13 @@ function calcScore(text, base) {
 }
 
 function makeShortConclusion(reply) {
-  const cleanReply = String(reply).replace(/\s+/g, " ").trim();
-
-  if (cleanReply.length <= 110) {
-    return cleanReply;
+  const lines = String(reply).split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  for (const line of lines) {
+    if (line.startsWith("まとめ:") || line.startsWith("まとめ：")) {
+      return line.replace(/^まとめ[:：]\s*/, "").trim();
+    }
   }
-
-  return cleanReply.slice(0, 110) + "…";
+  return String(reply).replace(/\s+/g, " ").trim();
 }
 
 async function summonAI() {
@@ -754,7 +754,7 @@ async function startAutoDebate() {
       await typeMessage(turn.text, "opponent-msg");
     } else if (turn.speaker === "doppel") {
       await typeMessage(turn.text, "ai-msg");
-    } else {
+    } else if (!turn.text.startsWith("まとめ：")) {
       await typeMessage(turn.text, "system-msg");
     }
   }
