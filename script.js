@@ -583,7 +583,9 @@ async function summonAI() {
   const chatArea = document.getElementById("chatArea");
   const resultArea = document.getElementById("resultArea");
   const loadingText = document.getElementById("loadingText");
-  const button = document.getElementById("summonButton");
+  
+  // 🌟 修正：HTMLの重複を考慮し、現在のアクションパネル内のボタンを確実に取得する
+  const button = document.querySelector(".action-panel-top #summonButton") || document.getElementById("summonButton");
 
   currentProfile = profile;
   conversationHistory = [];
@@ -592,7 +594,15 @@ async function summonAI() {
 
   chatArea.innerHTML = "";
   resultArea.innerHTML = "<p>議論中です…</p>";
-  updateAvatarCard(profile);
+
+  // 🌟 修正：古いミラーエリア（avatar-panel）が無い場合でもエラーを吐かせない安全対策
+  if (typeof updateAvatarCard === "function") {
+    try {
+      updateAvatarCard(profile);
+    } catch(e) {
+      console.log("アバターカード更新スキップ（新レイアウト適用のため）");
+    }
+  }
 
   // ローディングタイマーの管理用
   let loadingTimer = null;
@@ -615,8 +625,10 @@ async function summonAI() {
     // 2. 召喚準備
     setChatInputEnabled(false);
     setAutoDebateEnabled(false);
-    button.textContent = "分身を召喚中…";
-    button.disabled = true;
+    if (button) {
+      button.textContent = "分身を召喚中…";
+      button.disabled = true;
+    }
 
     let loadingIndex = 0;
     loadingText.textContent = loadingMessages[0];
@@ -626,8 +638,8 @@ async function summonAI() {
     }, 1050);
 
     // 3. API呼び出し
-    addMessage(profile.topic, "user-msg");
-    addMessage(`${profile.name || "あなた"} Mirrorを召喚しています…`, "system-msg");
+    //addMessage(profile.topic, "user-msg");
+    //addMessage(`${profile.name || "あなた"} Mirrorを召喚しています…`, "system-msg");
     conversationHistory.push({ role: "user", text: profile.topic });
 
     let reply = "";
@@ -642,8 +654,21 @@ async function summonAI() {
       isFallback = true;
     }
 
-    // 4. 結果表示
-    await typeMessage(reply, "ai-msg");
+    // 4. 結果表示（修正：右のチャットではなく、左の専用パネルにタイピング表示する）
+    const opinionPanel = document.getElementById("firstOpinionPanel");
+    const opinionContent = document.getElementById("firstOpinionContent");
+
+    if (opinionPanel && opinionContent) {
+      opinionPanel.style.display = "block"; // パネルを表示する
+      opinionContent.innerHTML = "";        // 中身を一度リセット
+      
+      // 🌟 左側のパネル専用のタイピング関数（すぐ下に定義します）を呼び出す
+      await typeMessageIntoElement(reply, opinionContent);
+    } else {
+      // 万が一HTMLの用意がない場合の保険（従来通りチャットに出す）
+      await typeMessage(reply, "ai-msg");
+    }
+
     conversationHistory.push({ role: "assistant", text: reply });
     createResultSummary(profile, reply, isFallback);
     saveChatHistory(profile.topic, conversationHistory);
@@ -656,8 +681,10 @@ async function summonAI() {
     // 🌟 ここで必ずローディングを止める
     if (loadingTimer) clearInterval(loadingTimer);
     loadingText.textContent = "";
-    button.textContent = "もう一度最初から議論する";
-    button.disabled = false;
+    if (button) {
+      button.textContent = "もう一度最初から議論する";
+      button.disabled = false;
+    }
     setChatInputEnabled(true);
     setAutoDebateEnabled(true);
   }
@@ -858,4 +885,32 @@ function changeSituationRandom() {
   
   // 上の関数を呼び出す。中でリセットと選択ボタンの点灯がクリーンに行われます。
   changeSituation(randomKey);
+}
+
+// 左カラムの要素にテキストを1文字ずつタイピング表示する関数
+async function typeMessageIntoElement(text, element) {
+  return new Promise((resolve) => {
+    let index = 0;
+    element.innerHTML = "";
+    
+    function type() {
+      if (index < text.length) {
+        // 改行コード（\n）があれば <br> に変換、それ以外はそのまま1文字追加
+        if (text.substr(index, 1) === "\n") {
+          element.innerHTML += "<br>";
+        } else {
+          element.innerHTML += text.substr(index, 1);
+        }
+        index++;
+        
+        // 画面スクロール（文字が増えても自動で追従させる）
+        element.scrollTop = element.scrollHeight;
+        
+        setTimeout(type, 25); // 25ms 間隔でタイピング（速度はお好みで）
+      } else {
+        resolve();
+      }
+    }
+    type();
+  });
 }

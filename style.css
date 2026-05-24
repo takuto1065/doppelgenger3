@@ -688,14 +688,9 @@ select:focus {
 */
 .chat-area {
   flex: 1;
-  min-height: 0;
   overflow-y: auto;
-
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  padding: 2px 4px 4px 0;
+  min-height: 0;
+  margin-bottom: 15px;
 }
 
 .empty-state {
@@ -929,31 +924,54 @@ select:focus {
 /* =========================
    Responsive
 ========================= */
+/* =========================
+   Main Layout & Columns (デスクトップ向け：左右50%等分割)
+========================= */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 左右を 50% ずつ美しく等分割 */
+  gap: 22px;
+  align-items: start; /* 上詰めで配置 */
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 左カラム：3つのブロック（プロフィール・設定・召喚）を縦に綺麗に並べる */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 右カラム：ステータスとチャットを縦に並べ、チャットを長くする */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+/* 💡 チャットパネルを右側いっぱいに伸ばしてスクロール可能にする設定 */
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 600px; /* 右側の「議論の続き」をしっかり見せるための高さ */
+}
+
+/* =========================
+   Main Layout & Columns (デスクトップ向け：左右50%等分割)
+========================= */
 @media (max-width: 900px) {
   body {
     padding: 16px;
   }
 
+  /* タブレット・スマホ画面では、左右分割ではなく縦1列に綺麗に並べる */
   .main-layout {
     grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .form-panel {
-    height: auto;
-  }
-
-  .side-column {
-    height: auto;
-  }
-
-  /*
-    スマホ・タブレットでは画面に合わせて固定高さにする。
-    長くなったらチャット内だけスクロール。
-  */
-  .chat-panel {
-    flex: none;
-    height: 470px;
+    gap: 20px;
+    padding: 10px;
   }
 
   .result-grid {
@@ -1052,13 +1070,31 @@ select:focus {
     padding: 13px 16px;
   }
 }
-/* 🏛️ シチュエーションボタンが選択されている時のスタイル */
-.situation-selector button.active {
-  background-color: #e2e8f0 !important; /* 背景を明るい白ベースに */
-  color: #1a202c !important;            /* 文字を濃い色にして目立たせる */
-  box-shadow: 0 0 0 3px #9f7aea;         /* 紫色の綺麗な光る枠線をつける */
-  font-weight: bold;
-  transform: scale(1.05);                /* 少しだけボタンを大きくする */
+/* 🏛️ シチュエーションボタン（標準、国会、ファミレス、ランダム）の共通・選択時スタイル */
+.button-group button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background-color: #edf2f7 !important; 
+  border: 1px solid rgba(190, 210, 230, 0.5) !important;
+  color: #718096 !important;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.button-group button:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e0 !important;
+  transform: translateY(-1px);
+}
+
+/* 🌟 ボタンがアクティブ（選択中）になった時のパステルブルーエフェクト */
+.button-group button.active {
+  background-color: #d0e2ff !important;
+  color: #3d5a80 !important;
+  border: 1px solid #a4c4ff !important;
+  box-shadow: 0 4px 12px rgba(143, 185, 232, 0.25) !important;
+  transform: scale(1.03);
 }
 
 /* ついでにボタンの隙間やポインターの基本設定 */
@@ -1294,4 +1330,43 @@ select:focus {
   font-size: 0.97rem;
   line-height: 1.8;
   color: var(--text-main);
+}
+
+/* =========================================================
+   最下部に追記：右上アクションボタン & シチュエーションボタンバグ修正
+   ========================================================= */
+.action-panel-top {
+  display: flex;
+  flex-direction: column; /* ボタンを縦に2つ並べる */
+  gap: 12px;              /* ボタン同士の隙間 */
+  padding: 20px;
+  background: var(--panel);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;         /* チャットに押されて潰れないように固定 */
+}
+
+/* ＝ 1枚目の画像バグ対策：シチュエーションボタンのスタイルを上書き強制 ＝ */
+.button-group button {
+  padding: 8px 16px !important;
+  border-radius: 999px !important;
+  background-color: #edf2f7 !important; /* 初期状態は優しい薄グレー */
+  border: 1px solid rgba(190, 210, 230, 0.5) !important;
+  color: #718096 !important;             /* 文字を読みやすいグレーに */
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-group button:hover {
+  background-color: #e2e8f0 !important;
+  color: #4a5568 !important;
+}
+
+/* 🔵 選択されている（現在アクティブな）ボタンのパステルブルー化 */
+.button-group button.active {
+  background-color: #d0e2ff !important; /* 優しいパステルブルー */
+  color: #3d5a80 !important;            /* 濃いブルーの文字 */
+  border: 1px solid #a4c4ff !important;
+  box-shadow: 0 4px 12px rgba(143, 185, 232, 0.25) !important;
+  transform: scale(1.02);
 }
