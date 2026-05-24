@@ -5,3 +5,4 @@ flask-cors
 authlib
 flask-login
 requests
+supabase==2.15.3
