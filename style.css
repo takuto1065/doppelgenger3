@@ -1097,6 +1097,23 @@ select:focus {
     padding: 13px 16px;
   }
 }
+.dialect-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.dialect-selector select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 210, 230, 0.6);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text-main);
+  font-size: 14px;
+  cursor: pointer;
+}
+
 /* 🏛️ シチュエーションボタン */
 .button-group button,
 .situation-selector button {
