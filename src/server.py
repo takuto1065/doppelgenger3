@@ -44,13 +44,9 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    from database import get_conn
-    conn = get_conn()
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    row = c.fetchone()
-    conn.close()
-    return User(dict(row)) if row else None
+    from database import supabase
+    response = supabase.table("users").select("*").eq("id", user_id).execute()
+    return User(response.data[0]) if response.data else None
 
 
 # --- 静的ファイル配信 ---
