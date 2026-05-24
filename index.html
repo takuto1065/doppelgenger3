@@ -3,20 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>自分会議、開催中</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <div class="app">
-    <header class="app-header">
+
+  <!-- ========== タイトル画面 ========== -->
+  <div id="titleScreen" class="screen">
+    <div class="title-wrap">
       <p class="eyebrow">AI Doppelgänger Discussion App</p>
-      <h1>自分会議、開催中</h1>
-      <p class="header-text">
-        もう一人のあなたが、あなたの価値観で議論する。
-      </p>
+      <h1 class="title-logo">自分会議、開催中</h1>
+      <p class="title-sub">もう一人のあなたが、あなたの価値観で議論する。</p>
 
       <div id="authArea" class="auth-area">
         <div id="loggedOut" style="display:none;">
@@ -28,98 +26,145 @@
           <a href="/auth/logout" class="logout-button">ログアウト</a>
         </div>
       </div>
-    </header>
 
-    <main class="main-layout">
-      <section class="panel form-panel">
-        <div class="section-heading">
-          <span class="step-badge">Step 1</span>
-          <h2>分身プロフィール</h2>
-        </div>
+      <div class="title-buttons">
+        <button class="title-start-btn" onclick="showScreen('gameScreen')">はじめる</button>
+        <button class="title-how-btn" onclick="showScreen('howToScreen')">遊び方</button>
+      </div>
+    </div>
+  </div>
 
-        <div class="form-grid">
-          <input id="nameInput" type="text" placeholder="名前">
-          <input id="personalityInput" type="text" placeholder="性格">
-          <input id="hobbyInput" type="text" placeholder="趣味">
-          <textarea id="thoughtInput" placeholder="普段の考え方"></textarea>
-          <input id="topicInput" type="text" placeholder="テーマ、AIに議論してほしいこと(未入力の場合AIが自動生成します。)">
-        </div> <div class="situation-selector" style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
-          <label style="font-weight: bold; display: block; margin-bottom: 8px; font-size: 0.9rem; color: #a090a8;">🏛️ 議論シチュエーション設定：</label>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" id="btn-standard" class="active" onclick="changeSituation('standard')" style="background: #4a5568; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">標準</button>
-            <button type="button" id="btn-diet" onclick="changeSituation('diet')" style="background: #2b6cb0; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">🏛️ 国会答弁</button>
-            <button type="button" id="btn-friends" onclick="changeSituation('friends')" style="background: #b7791f; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">🍟 友達とファミレス</button>
-            <button type="button" id="btn-random" onclick="changeSituationRandom()" style="background: #6b46c1; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">🎲 ランダムでおまかせ</button>
+  <!-- ========== 遊び方画面 ========== -->
+  <div id="howToScreen" class="screen" style="display:none;">
+    <div class="howto-wrap">
+      <button class="back-button" onclick="showScreen('titleScreen')">← タイトルに戻る</button>
+      <h2 class="howto-title">遊び方</h2>
+
+      <div class="howto-steps">
+        <div class="howto-step">
+          <div class="howto-step-num">1</div>
+          <div class="howto-step-body">
+            <h3>プロフィールを入力する</h3>
+            <p>名前・性格・趣味・考え方を入力して、あなたの「分身AI」を作ります。詳しく書くほど、よりあなたらしい分身になります。</p>
           </div>
         </div>
 
-        <button id="summonButton" class="primary-button" onclick="summonAI()">
-          分身を召喚する
-        </button>
-
-        <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled>
-          AI同士で議論させる
-        </button>
-      </section>
-      ```
-
-      <section class="side-column">
-        <section class="panel avatar-panel">
-          <div class="avatar-icon">✦</div>
-
-          <div class="avatar-info">
-            <p class="avatar-label">AI分身</p>
-            <h2 id="avatarName">まだ召喚されていません</h2>
-            <p id="avatarMeta">プロフィールを入力すると、あなたの分身がここに現れます。</p>
+        <div class="howto-step">
+          <div class="howto-step-num">2</div>
+          <div class="howto-step-body">
+            <h3>議論テーマを決める</h3>
+            <p>「将来のこと」「AIとの向き合い方」など、あなたが考えたいテーマを入力します。空欄のままだとAIが自動でテーマを考えてくれます。</p>
           </div>
-        </section>
+        </div>
 
-        <section class="panel chat-panel">
+        <div class="howto-step">
+          <div class="howto-step-num">3</div>
+          <div class="howto-step-body">
+            <h3>分身を召喚する</h3>
+            <p>「分身を召喚する」ボタンを押すと、あなたの価値観を持ったAIが登場して話しかけてきます。</p>
+          </div>
+        </div>
+
+        <div class="howto-step">
+          <div class="howto-step-num">4</div>
+          <div class="howto-step-body">
+            <h3>AIと議論する</h3>
+            <p>分身AIに追加で質問したり、「AI同士で議論させる」ボタンで分身AIと議論AIが自動で話し合う様子を見ることができます。</p>
+          </div>
+        </div>
+
+        <div class="howto-tip">
+          💡 シチュエーションを「国会答弁」や「友達とファミレス」に変えると、同じテーマでもまったく違うノリで議論してくれます。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ゲーム画面 ========== -->
+  <div id="gameScreen" class="screen" style="display:none;">
+    <div class="app">
+      <header class="app-header">
+        <button class="back-button" onclick="showScreen('titleScreen')">← タイトルに戻る</button>
+        <h1>自分会議、開催中</h1>
+      </header>
+
+      <main class="main-layout">
+        <section class="panel form-panel">
           <div class="section-heading">
-            <span class="step-badge">Step 3</span>
-            <h2>AIとの議論</h2>
+            <span class="step-badge">Step 1</span>
+            <h2>分身プロフィール</h2>
           </div>
 
-          <div id="chatArea" class="chat-area">
-            <div class="empty-state">
-              <p>まだ分身は召喚されていません。</p>
-              <span>テーマを入力して「分身を召喚する」を押してね。</span>
+          <div class="form-grid">
+            <input id="nameInput" type="text" placeholder="名前">
+            <input id="personalityInput" type="text" placeholder="性格">
+            <input id="hobbyInput" type="text" placeholder="趣味">
+            <textarea id="thoughtInput" placeholder="普段の考え方"></textarea>
+            <input id="topicInput" type="text" placeholder="テーマ、AIに議論してほしいこと(未入力の場合AIが自動生成します。)">
+          </div>
+
+          <div class="situation-selector" style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 8px; font-size: 0.9rem; color: #a090a8;">🏛️ 議論シチュエーション設定：</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" id="btn-standard" class="active" onclick="changeSituation('standard')" style="background: #4a5568; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">標準</button>
+              <button type="button" id="btn-diet" onclick="changeSituation('diet')" style="background: #2b6cb0; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">🏛️ 国会答弁</button>
+              <button type="button" id="btn-friends" onclick="changeSituation('friends')" style="background: #b7791f; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">🍟 友達とファミレス</button>
+              <button type="button" id="btn-random" onclick="changeSituationRandom()" style="background: #6b46c1; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">🎲 ランダムでおまかせ</button>
             </div>
           </div>
 
-          <div id="loadingText" class="loading-text"></div>
+          <button id="summonButton" class="primary-button" onclick="summonAI()">
+            分身を召喚する
+          </button>
 
-          <div class="chat-input-area">
-            <input
-              id="followupInput"
-              type="text"
-              placeholder="分身AIに追加で質問する..."
-              disabled
-            />
-
-            <button
-              id="sendButton"
-              type="button"
-              onclick="sendFollowup()"
-              disabled
-            >
-              送信
-            </button>
-          </div>
+          <button id="autoDebateButton" class="secondary-button" onclick="startAutoDebate()" disabled>
+            AI同士で議論させる
+          </button>
         </section>
+
+        <section class="side-column">
+          <section class="panel avatar-panel">
+            <div class="avatar-icon">✦</div>
+            <div class="avatar-info">
+              <p class="avatar-label">AI分身</p>
+              <h2 id="avatarName">まだ召喚されていません</h2>
+              <p id="avatarMeta">プロフィールを入力すると、あなたの分身がここに現れます。</p>
+            </div>
+          </section>
+
+          <section class="panel chat-panel">
+            <div class="section-heading">
+              <span class="step-badge">Step 3</span>
+              <h2>AIとの議論</h2>
+            </div>
+
+            <div id="chatArea" class="chat-area">
+              <div class="empty-state">
+                <p>まだ分身は召喚されていません。</p>
+                <span>テーマを入力して「分身を召喚する」を押してね。</span>
+              </div>
+            </div>
+
+            <div id="loadingText" class="loading-text"></div>
+
+            <div class="chat-input-area">
+              <input id="followupInput" type="text" placeholder="分身AIに追加で質問する..." disabled />
+              <button id="sendButton" type="button" onclick="sendFollowup()" disabled>送信</button>
+            </div>
+          </section>
+        </section>
+      </main>
+
+      <section class="panel result-panel">
+        <div class="section-heading">
+          <span class="step-badge">Result</span>
+          <h2>議論まとめ</h2>
+        </div>
+        <div id="resultArea" class="result-area">
+          <p>まだ議論していません。</p>
+        </div>
       </section>
-    </main>
-
-    <section class="panel result-panel">
-      <div class="section-heading">
-        <span class="step-badge">Result</span>
-        <h2>議論まとめ</h2>
-      </div>
-
-      <div id="resultArea" class="result-area">
-        <p>まだ議論していません。</p>
-      </div>
-    </section>
+    </div>
   </div>
 
   <script src="script.js"></script>

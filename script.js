@@ -41,6 +41,11 @@ let conversationHistory = [];
 let isSummoned = false;
 let currentSessionId = null;
 
+function showScreen(screenId) {
+  document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+  document.getElementById(screenId).style.display = "block";
+}
+
 async function checkAuthState() {
   try {
     const res = await fetch("/api/me", { credentials: "include" });
