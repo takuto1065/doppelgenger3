@@ -1097,6 +1097,30 @@ select:focus {
     padding: 13px 16px;
   }
 }
+/* 分身の意見パネル */
+.opinion-panel {
+  margin-top: 16px;
+}
+
+.opinion-title {
+  font-size: 0.9rem;
+  color: #a090a8;
+  margin: 0 0 8px;
+}
+
+.opinion-content {
+  height: 260px;
+  overflow-y: auto;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(185, 210, 235, 0.7);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-main);
+}
+
 .dialect-selector {
   display: flex;
   align-items: center;
