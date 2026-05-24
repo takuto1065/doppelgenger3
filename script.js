@@ -727,6 +727,14 @@ async function startAutoDebate() {
 
   const autoDebateButton = document.getElementById("autoDebateButton");
   const loadingText = document.getElementById("loadingText");
+  const debateFlash = document.getElementById("debateFlash");
+  const flameOverlay = document.getElementById("flameOverlay");
+
+  // 議論開始フラッシュ
+  debateFlash.classList.add("active");
+  flameOverlay.classList.add("active");
+  await new Promise(r => setTimeout(r, 2400));
+  debateFlash.classList.remove("active");
 
   autoDebateButton.disabled = true;
   loadingText.textContent = "AI同士が議論中…";
@@ -766,6 +774,7 @@ async function startAutoDebate() {
 
   createResultSummary(currentProfile, debateText, isFallback);
 
+  flameOverlay.classList.remove("active");
   autoDebateButton.disabled = false;
 }
 
