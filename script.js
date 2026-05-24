@@ -507,7 +507,16 @@ function createResultSummary(profile, reply, isFallback) {
 
   const modeLabel = isFallback ? "仮応答モード" : "AI応答モード";
 
+  const conclusion = makeShortConclusion(reply);
+
   resultArea.innerHTML = `
+    <div class="summary-card conclusion-card">
+      <h3>📝 まとめ</h3>
+      <p>${escapeHtml(conclusion)}</p>
+    </div>
+
+    <br />
+
     <div class="result-grid">
       <div class="summary-card">
         <h3>テーマ</h3>
@@ -523,13 +532,6 @@ function createResultSummary(profile, reply, isFallback) {
         <h3>応答状態</h3>
         <p>${modeLabel}</p>
       </div>
-    </div>
-
-    <br />
-
-    <div class="summary-card">
-      <h3>直近の議論まとめ</h3>
-      <p>${escapeHtml(makeShortConclusion(reply))}</p>
     </div>
 
     <br />
@@ -775,7 +777,29 @@ async function startAutoDebate() {
   createResultSummary(currentProfile, debateText, isFallback);
 
   flameOverlay.classList.remove("active");
+  launchConfetti();
   autoDebateButton.disabled = false;
+}
+
+function launchConfetti() {
+  const colors = ["#ff4757", "#ffa502", "#2ed573", "#1e90ff", "#ff6b81", "#eccc68", "#a29bfe"];
+  const count = 80;
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    el.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      width: ${Math.random() * 8 + 6}px;
+      height: ${Math.random() * 8 + 6}px;
+      border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
+      animation-duration: ${Math.random() * 1.5 + 1.2}s;
+      animation-delay: ${Math.random() * 0.6}s;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

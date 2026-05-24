@@ -1249,3 +1249,49 @@ select:focus {
       inset 0 0 150px 55px rgba(255, 110, 0, 0.28);
   }
 }
+
+/* =========================
+   クラッカー紙吹雪
+========================= */
+
+.confetti-piece {
+  position: fixed;
+  top: -10px;
+  z-index: 9990;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* =========================
+   まとめカード強調
+========================= */
+
+.conclusion-card {
+  border: 2px solid rgba(143, 185, 232, 0.5);
+  background: linear-gradient(135deg, rgba(237, 247, 255, 0.9), rgba(255, 241, 247, 0.9));
+}
+
+.conclusion-card h3 {
+  font-size: 1.1rem;
+  color: var(--text-strong);
+}
+
+.conclusion-card p {
+  font-size: 0.97rem;
+  line-height: 1.8;
+  color: var(--text-main);
+}
