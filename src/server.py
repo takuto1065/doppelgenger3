@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from database import init_db, get_or_create_user, get_profile, save_profile, create_chat_session, save_chat_message, get_chat_sessions
 
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-load_dotenv(dotenv_path)
+load_dotenv(dotenv_path, override=True)
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), ".."))
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")

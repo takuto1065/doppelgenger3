@@ -12,7 +12,7 @@ class DiscussionManager:
     def __init__(self):
         # 1. .envファイルから環境変数を読み込みます（srcフォルダから見て1つ上の階層にあります）
         dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-        load_dotenv(dotenv_path)
+        load_dotenv(dotenv_path, override=True)
         
         self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
